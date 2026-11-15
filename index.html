@@ -79,6 +79,16 @@ h2{font:900 clamp(44px,6vw,80px)/.9 var(--display);letter-spacing:-.04em;text-tr
 .cover .cue{position:absolute;left:50%;bottom:76px;transform:translateX(-50%);font:600 12px var(--display);color:var(--white);opacity:.85}
 
 .cside{display:none}
+/* transiciones de entrada */
+.rv-on .rv{opacity:0;transform:translateY(28px);transition:opacity .8s cubic-bezier(.2,.8,.2,1),transform .8s cubic-bezier(.2,.8,.2,1);transition-delay:var(--d,0s)}
+.rv-on .rv.in{opacity:1;transform:none}
+.rv-on h2.rv{opacity:1;transform:none;clip-path:inset(0 0 100% 0);transition:clip-path 1s cubic-bezier(.7,0,.2,1) .05s}
+.rv-on h2.rv.in{clip-path:inset(-10% -10% -20% -10%)}
+.rv-on .rv-stag:not(.done)>*{opacity:0;transform:translateX(36px)}
+.rv-on .rv-stag.in:not(.done)>*{opacity:1;transform:none;transition:opacity .6s ease,transform .7s cubic-bezier(.2,.8,.2,1)}
+.rv-on .rv-stag.in:not(.done)>:nth-child(2){transition-delay:.07s}.rv-on .rv-stag.in:not(.done)>:nth-child(3){transition-delay:.14s}.rv-on .rv-stag.in:not(.done)>:nth-child(4){transition-delay:.21s}.rv-on .rv-stag.in:not(.done)>:nth-child(5){transition-delay:.28s}.rv-on .rv-stag.in:not(.done)>:nth-child(6){transition-delay:.35s}.rv-on .rv-stag.in:not(.done)>:nth-child(n+7){transition-delay:.42s}
+.rv-on .rv-words .w{display:inline-block;opacity:0;transform:translateY(55%) rotate(3deg);transition:opacity .6s ease,transform .8s cubic-bezier(.2,.8,.2,1);transition-delay:calc(var(--i) * 90ms)}
+.rv-on .rv-words.in .w{opacity:1;transform:none}
 /* ===== Frase ===== */
 .frase{background:var(--red);color:var(--ink);padding-top:clamp(56px,9vw,120px);padding-bottom:clamp(56px,9vw,120px)}
 .frase p{margin:0;font:900 clamp(36px,7.4vw,104px)/.98 var(--display);letter-spacing:-.035em;max-width:14ch}
@@ -763,6 +773,23 @@ $("yr").textContent = new Date().getFullYear();
   try{ const data = await (await fetch(CONFIG.SHEET_API_URL + "?t=" + Date.now())).json();
     if(data && data.ok){ renderAll(data); try{ localStorage.setItem("urbanse_data", JSON.stringify(data)); }catch(e){} } }
   catch(e){ console.warn("No se pudo leer el Sheet", e); }
+})();
+/* ---------- Transiciones al entrar en pantalla ---------- */
+(() => {
+  if(matchMedia("(prefers-reduced-motion:reduce)").matches || !("IntersectionObserver" in window)) return;
+  document.documentElement.classList.add("rv-on");
+  document.querySelectorAll(".frase p").forEach(p => { p.innerHTML = p.textContent.trim().split(/\s+/).map((w,i) => `<span class="w" style="--i:${i}">${w}</span>`).join(" "); p.classList.add("rv-words"); });
+  ["bio","videos","musica","fechas","tienda","booking"].forEach(id => {
+    const w = document.querySelector(`#${id} .wrap`); if(!w) return;
+    let n = 0; [...w.children].forEach(el => { el.classList.add("rv"); if(el.tagName !== "H2") el.style.setProperty("--d", (Math.min(n++, 6) * 0.08) + "s"); });
+  });
+  ["rail","discs","pile","shows","socials"].forEach(id => $(id) && $(id).classList.add("rv-stag"));
+  const io = new IntersectionObserver(es => es.forEach(e => {
+    if(!e.isIntersecting) return;
+    const el = e.target; el.classList.add("in"); io.unobserve(el);
+    if(el.classList.contains("rv-stag")) setTimeout(() => el.classList.add("done"), 1400);
+  }), {threshold:0.12, rootMargin:"0px 0px -6% 0px"});
+  document.querySelectorAll(".rv, .rv-stag, .rv-words").forEach(el => io.observe(el));
 })();
 </script>
 </body>
