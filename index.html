@@ -249,16 +249,15 @@ footer{position:relative;overflow:hidden;background:var(--ink);border-top:1px so
   .topnav nav a{font:700 14px var(--display)}
   .topnav nav a:hover,.topnav nav a.on{color:var(--red)}
   /* portada: logo arriba, a la izquierda el texto y a la derecha la foto vertical entera */
-  /* portada escritorio: afiche, foto a toda la altura y logo impreso encima */
-  .cover{position:relative;display:block;height:100svh;min-height:640px;overflow:hidden}
-  .cover .top,.cover .meta{position:relative;z-index:3}
-  .cover .meta span:last-child{color:var(--white)}
-  .cover h1{position:relative;z-index:3;mix-blend-mode:multiply;padding-top:2vh}
-  .cover .grid{position:absolute;inset:0;display:block;padding:0}
-  .cover .photo{position:absolute;top:0;right:0;bottom:0;width:min(58%,calc(100svh * .82));min-height:0;aspect-ratio:auto}
-  .cover .photo img{object-position:50% 30%;-webkit-mask-image:linear-gradient(90deg,transparent,#000 22%);mask-image:linear-gradient(90deg,transparent,#000 22%)}
-  .cover .left{position:absolute;left:var(--pad);bottom:44px;z-index:3}
-  .cover .left p{max-width:400px;font:500 19px/1.45 var(--body);color:var(--white)}
+  /* portada escritorio: misma composición que en el teléfono, centrada como un afiche */
+  .cover{min-height:0;display:block}
+  .cover>*{width:min(100%,820px);margin-inline:auto}
+  .cover .top{padding-top:22px}
+  .cover .meta{font-size:15px;padding-bottom:22px}
+  .cover .grid{display:block}
+  .cover .photo{min-height:0;height:max(520px,calc(100svh - 300px));margin:0 var(--pad)}
+  .cover .photo img{object-position:50% 34%}
+  .cover .left{display:none}
   .more span{display:none}
   .cover .cue{display:none}
   /* videos: destacado + tarjetas al lado */
