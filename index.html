@@ -90,7 +90,12 @@ a.thumb:hover img,.vcard:hover img{transform:scale(1.03)}
 .disc-head{display:flex;justify-content:space-between;align-items:center;margin:26px 0 12px}
 #musica .pill{background:#E3DFD7;color:var(--ink)}
 #musica .pill[aria-pressed="true"]{background:var(--red)}
-.disc{flex:none;width:150px}
+.disc{flex:none;width:150px;text-align:left;color:inherit;cursor:pointer}
+.disc .sq img{width:100%;height:100%;object-fit:cover;display:block}
+.disc .tag{position:absolute;right:8px;bottom:8px;background:var(--ink);color:var(--white);font:700 11px var(--display);font-style:normal;padding:3px 6px;opacity:0;transition:opacity .2s}
+.disc:hover .tag,.disc:focus-visible .tag,.disc.on .tag{opacity:1}
+.disc.on .sq{box-shadow:0 0 0 3px var(--red)}
+@media (hover:none){.disc .tag{opacity:1}}
 .disc .sq{position:relative;display:block;width:150px;height:150px}
 .disc .sq small{position:absolute;left:12px;top:10px;font:700 11px var(--display)}
 .disc .sq i{position:absolute;left:12px;bottom:8px;font:900 44px/1 var(--display);font-style:normal;letter-spacing:-.03em}
@@ -347,7 +352,7 @@ const CONFIG = {
   SHEET_API_URL: "",
   SPOTIFY_ARTIST_ID: "66X3l109SsMthurq0pHk3g",
   MERCH_LANZAMIENTO: "",
-  REDES: { instagram:"https://www.instagram.com/urbanse/", tiktok:"https://www.tiktok.com/@elurbanse", spotify:"https://open.spotify.com/artist/66X3l109SsMthurq0pHk3g", youtube:"", x:"https://twitter.com/Urbanse", facebook:"https://www.facebook.com/UrbanseOficial/" }
+  REDES: { instagram:"https://www.instagram.com/urbanse/", tiktok:"https://www.tiktok.com/@elurbanse", spotify:"https://open.spotify.com/artist/66X3l109SsMthurq0pHk3g", youtube:"https://youtube.com/channel/UCWUkiZdLRdWJVyCVCgIRuqw", x:"https://x.com/urbanse", facebook:"https://www.facebook.com/UrbanseOficial/" }
 };
 const FALLBACK = { fechas:[], merch:[], videos:[
   {titulo:"Decisiones", ft:"ft. Norick", tipo:"Videoclip", youtube_url:"8-QxQmfHAkg", fecha:"2026", destacado:"si"},
@@ -359,9 +364,26 @@ const FALLBACK = { fechas:[], merch:[], videos:[
   {titulo:"Delivery", ft:"Película completa", tipo:"Película", youtube_url:"lYU0akL7pGs", fecha:"2023"},
   {titulo:"Faina", ft:"Película completa", tipo:"Película", youtube_url:"Iz4xtFV_wAg", fecha:"2024"}
 ]};
+/* id = álbum de Spotify (al tocarlo suena en el reproductor de arriba). Sin id: abre la búsqueda en Spotify. */
+const SC = "https://i.scdn.co/image/";
 const DISCOS = {
-  discos:[["IV Mundo","con Jonas Sanche","2025","#D71D22","#0E0E0E"],["Faina","EP","2024","#0E0E0E","#D71D22"],["Delivery","","2023","#F2F0EC","#0E0E0E"],["Desenchufados 1–3","con Veeyam","2020–22","#D71D22","#0E0E0E"],["Literal","con Uzetaele","2017","#0E0E0E","#D71D22"],["Puño Arriba","","2012","#F2F0EC","#0E0E0E"],["La Conección Real","mixtapes","2010–12","#D71D22","#0E0E0E"]],
-  cruces:[["Decisiones","ft. Norick","2026","#0E0E0E","#D71D22"],["Ultra","ft. Lil Supa', Nichess One & 3M5","2025","#D71D22","#0E0E0E"],["El Brillo","ft. Granuja","2025","#F2F0EC","#0E0E0E"],["Cypher Vol. 1","ft. Acru, KMD, Brapis, Santoz","2020","#0E0E0E","#D71D22"],["Construchendo","ft. Rxnde Akozta","2018","#D71D22","#0E0E0E"],["WC","ft. T&K","2016","#F2F0EC","#0E0E0E"]]
+  discos:[
+    {t:"IV Mundo", s:"con Jonas Sanche", y:"2025", bg:"#D71D22", fg:"#0E0E0E"},
+    {t:"Faina", s:"EP", y:"2024", bg:"#0E0E0E", fg:"#D71D22"},
+    {t:"Delivery", s:"", y:"2023", id:"65ZpaY8EvRFuLPwT3hbr6s", img:SC+"ab67616d0000b27312ce0cb342ed55939fc223b9"},
+    {t:"Desenchufados 3", s:"con Veeyam", y:"2022", id:"4N0srLraQmT6JLscYWZjMu", img:SC+"ab67616d0000b273934e29f32a1caf92fb5c8288"},
+    {t:"Literal", s:"con Uzetaele", y:"2017", id:"5qRVoWBh5K6FZaJQWp9qIF", img:SC+"ab67616d0000b273acb1cc2294cb9de84865fef1"},
+    {t:"Puño Arriba", s:"", y:"2012", bg:"#F2F0EC", fg:"#0E0E0E"},
+    {t:"La Conección Real", s:"mixtapes", y:"2010–12", bg:"#D71D22", fg:"#0E0E0E"}
+  ],
+  cruces:[
+    {t:"Decisiones", s:"ft. Norick", y:"2026", bg:"#0E0E0E", fg:"#D71D22"},
+    {t:"Ultra", s:"ft. Lil Supa', Nichess One & 3M5", y:"2025", bg:"#D71D22", fg:"#0E0E0E"},
+    {t:"El Brillo", s:"ft. Granuja", y:"2025", id:"1vuMlw2cst7DxfucAWn2s0", img:SC+"ab67616d0000b27357cc3e732b6812a6d878be28"},
+    {t:"Cypher Vol. 1", s:"ft. Acru, Kamada, Brapis, Santoz", y:"2019", id:"08qKl8idW6e8LLne09S89v", img:SC+"ab67616d0000b273ee03b93c59890f90dd64e03d"},
+    {t:"Construchendo", s:"ft. Rxnde Akozta", y:"2018", bg:"#F2F0EC", fg:"#0E0E0E"},
+    {t:"WC", s:"T&K · Writing Classics", y:"2016", id:"3mPCEccjbtZc1BsVaePdCO", img:SC+"ab67616d0000b273fbb58be4f0bbcb20ed67d98b"}
+  ]
 };
 const ICONS = {
   instagram:'<path d="M12 2.2c3.2 0 3.6 0 4.8.1 3.3.1 4.8 1.7 4.9 4.9.1 1.3.1 1.6.1 4.8s0 3.6-.1 4.8c-.1 3.2-1.7 4.8-4.9 4.9-1.3.1-1.6.1-4.8.1s-3.6 0-4.8-.1c-3.3-.1-4.8-1.7-4.9-4.9C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.8C2.4 3.9 3.9 2.4 7.2 2.3 8.4 2.2 8.8 2.2 12 2.2zM12 7a5 5 0 100 10 5 5 0 000-10zm0 8.2a3.2 3.2 0 110-6.4 3.2 3.2 0 010 6.4zM17.2 5.6a1.2 1.2 0 100 2.4 1.2 1.2 0 000-2.4z"/>',
@@ -371,7 +393,7 @@ const ICONS = {
   x:'<path d="M18.2 2.3h3.4l-7.4 8.4 8.7 11.5h-6.8l-5.3-7-6.1 7H1.3l7.9-9L.9 2.3h7l4.8 6.4 5.5-6.4zm-1.2 17.9h1.9L7.1 4.2h-2l11.9 16z"/>',
   facebook:'<path d="M24 12a12 12 0 10-13.9 11.9v-8.4H7.1V12h3V9.4c0-3 1.8-4.7 4.5-4.7 1.3 0 2.7.2 2.7.2v3h-1.5c-1.5 0-2 .9-2 1.9V12h3.4l-.5 3.5h-2.9v8.4A12 12 0 0024 12z"/>'
 };
-const LABELS = {instagram:["Instagram","@urbanse"],tiktok:["TikTok","@elurbanse"],spotify:["Spotify","Urbanse"],youtube:["YouTube",""],x:["X","@Urbanse"],facebook:["Facebook","UrbanseOficial"]};
+const LABELS = {instagram:["Instagram","@urbanse"],tiktok:["TikTok","@elurbanse"],spotify:["Spotify","Urbanse"],youtube:["YouTube","Urbanse"],x:["X","@Urbanse"],facebook:["Facebook","UrbanseOficial"]};
 const MESES = ["ENE","FEB","MAR","ABR","MAY","JUN","JUL","AGO","SEP","OCT","NOV","DIC"];
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -416,8 +438,23 @@ $("feature").addEventListener("click", e => { if(e.target.closest("[data-play]")
 
 /* ---------- Música ---------- */
 function renderDiscs(k){
-  $("discs").innerHTML = DISCOS[k].map(([t,s,y,bg,fg]) => `<div class="disc"><span class="sq" style="background:${bg};color:${fg};${bg==="#F2F0EC"?"box-shadow:inset 0 0 0 2px #0E0E0E":""}"><small>${k==="discos"?"Disco":"Cruce"}</small><i>${esc(y.slice(0,4))}</i></span><b>${esc(t)}</b><span>${esc(s)}</span></div>`).join("");
+  $("discs").innerHTML = DISCOS[k].map(d => {
+    const sq = d.img
+      ? `<span class="sq"><img src="${d.img}" alt="Portada de ${esc(d.t)}" loading="lazy"><em class="tag">▶ Escuchar aquí</em></span>`
+      : `<span class="sq" style="background:${d.bg};color:${d.fg};${d.bg==="#F2F0EC"?"box-shadow:inset 0 0 0 2px #0E0E0E":""}"><small>${k==="discos"?"Disco":"Cruce"}</small><i>${esc(d.y.slice(0,4))}</i><em class="tag">Spotify ↗</em></span>`;
+    const inner = `${sq}<b>${esc(d.t)}</b><span>${esc([d.s, d.y].filter(Boolean).join(" · "))}</span>`;
+    return d.id
+      ? `<button class="disc" data-album="${d.id}" aria-label="Escuchar ${esc(d.t)} en el reproductor">${inner}</button>`
+      : `<a class="disc" href="https://open.spotify.com/search/${encodeURIComponent("Urbanse " + d.t)}" target="_blank" rel="noopener" aria-label="Buscar ${esc(d.t)} en Spotify">${inner}</a>`;
+  }).join("");
 }
+$("discs").addEventListener("click", e => {
+  const b = e.target.closest("[data-album]"); if(!b) return;
+  spotifyLoaded = true;
+  $("spotifyBox").innerHTML = `<iframe src="https://open.spotify.com/embed/album/${b.dataset.album}?utm_source=generator&theme=0" title="${b.getAttribute("aria-label")}" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>`;
+  document.querySelectorAll("#discs .disc").forEach(x => x.classList.toggle("on", x===b));
+  $("spotifyBox").scrollIntoView({behavior:"smooth", block:"center"});
+});
 document.querySelectorAll("[data-d]").forEach(p => p.addEventListener("click", () => { setPills("[data-d]", p.dataset.d, "d"); renderDiscs(p.dataset.d); }));
 let spotifyLoaded = false;
 function loadSpotify(){ if(spotifyLoaded || !CONFIG.SPOTIFY_ARTIST_ID) return; spotifyLoaded = true;
