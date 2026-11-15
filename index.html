@@ -203,10 +203,16 @@ a.thumb:hover img{transform:scale(1.03)}
 .demo-note{font-size:13px;color:#555;margin:0 0 16px}
 .store{background:var(--ink);color:var(--white);padding:22px;display:grid;gap:26px}
 .prob{display:grid;gap:18px}
-.prob .stage{position:relative;aspect-ratio:1;background:#E3DFD7;width:100%}
+.prob .stage{position:relative;width:100%;padding:14px 0 8px}
+.pola{position:relative;margin:0 6%;background:var(--paper);padding:12px 12px 52px;transform:rotate(var(--r,-3deg));box-shadow:0 14px 26px rgba(0,0,0,.55);animation:pola-in .5s cubic-bezier(.2,.8,.2,1)}
+@keyframes pola-in{from{opacity:0;transform:translateY(-14px) rotate(calc(var(--r,-3deg) * -2))}}
+.pola .ph{position:relative;width:100%;aspect-ratio:1;background:radial-gradient(circle at 50% 40%,#5a5a5a,#2a2a2a 70%);overflow:hidden}
+.pola .ph::after{content:"";position:absolute;inset:0;background:linear-gradient(160deg,rgba(255,255,255,.14),transparent 45%);pointer-events:none}
+.pola .ph>svg{position:absolute;inset:8% 10%;width:80%;height:84%}
+.pola .ph>img{width:100%;height:100%;object-fit:cover}
+.pola .cp{position:absolute;left:14px;right:14px;bottom:15px;font:800 16px var(--display);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pola .tape{position:absolute;left:50%;top:-13px;width:92px;height:26px;transform:translateX(-50%) rotate(4deg);background:rgba(217,195,160,.85);z-index:2}
 #probInfo{min-width:0}
-.prob .stage>svg{position:absolute;inset:9% 11%;width:78%;height:82%}
-.prob .stage>img{width:100%;height:100%;object-fit:cover}
 .mlogo{position:absolute;left:50%;transform:translate(-50%,-50%);width:32%}
 .mlogo svg{display:block;width:100%;height:auto}.mlogo svg *{fill:currentColor}
 #probInfo .now{display:block;font:700 12px var(--display);color:var(--red);margin-bottom:6px}
@@ -683,7 +689,8 @@ function renderProbador(){
   const m = MERCH[mSel]; if(!m) return;
   const tl = String(m.talles||"").split(",").map(t => t.trim()).filter(Boolean);
   const url = safeUrl(m.link_compra), out = agotado(m), precio = m.precio || "$ —";
-  $("probStage").innerHTML = merchArt(m);
+  const tilt = [-3, 2, -1.5, 3, -2.5][mSel % 5];
+  $("probStage").innerHTML = `<div class="pola" style="--r:${tilt}deg"><span class="tape" aria-hidden="true"></span><div class="ph">${merchArt(m)}</div><div class="cp">${esc(m.producto)} · ${out ? "Agotado" : esc(precio)}</div></div>`;
   $("probInfo").innerHTML = `<span class="now">En el probador</span><h3>${esc(m.producto)}</h3><p class="meta">${esc([m.detalle, mDemo ? "Ejemplo" : ""].filter(Boolean).join(" · "))}</p>
     <div class="sizes">${tl.length ? tl.map((t,i) => `<button type="button" class="${i===Math.min(1,tl.length-1)?"on":""}">${esc(t)}</button>`).join("") : `<span class="on">Talle único</span>`}</div>
     ${out ? `<span class="cta off">Agotado</span>` : url ? `<a class="cta" href="${esc(url)}" target="_blank" rel="noopener">Comprar · ${esc(precio)}</a>` : `<span class="cta">${mDemo ? "Comprar · $ —" : "Muy pronto"}</span>`}`;
