@@ -79,6 +79,13 @@ h2{font:900 clamp(44px,6vw,80px)/.9 var(--display);letter-spacing:-.04em;text-tr
 .cover .cue{position:absolute;left:50%;bottom:76px;transform:translateX(-50%);font:600 12px var(--display);color:var(--white);opacity:.85}
 
 .cside{display:none}
+/* ===== Bio ===== */
+.bio{background:var(--paper);color:var(--ink)}
+.bio .kicker{color:#555}
+.bio-lead{font:800 clamp(26px,4.2vw,46px)/1.08 var(--display);letter-spacing:-.02em;margin:14px 0 18px;max-width:22ch}
+.bio-txt{font:400 17px/1.6 var(--body);max-width:62ch;color:#2A2A2A;margin:0 0 18px}
+.bio-live{font:700 13px var(--display);color:var(--red-deep);margin:0}
+@media (min-width:900px){.bio .wrap{display:grid;grid-template-columns:1.1fr 1fr;column-gap:56px;align-items:end}.bio .mark,.bio .kicker{grid-column:1/-1}.bio-lead{margin-bottom:0}.bio-txt,.bio-live{grid-column:2}.bio-lead{grid-row:span 2}}
 /* ===== Videos ===== */
 #videos{background:var(--ink)}
 .feature{display:block;margin-top:20px}
@@ -359,6 +366,16 @@ footer{position:relative;overflow:hidden;background:var(--ink);border-top:1px so
     <a class="cv cv-r" href="#musica"><b>Nuevo:</b> Faina — EP 2024 · ▶ Escuchar</a>
     <a class="cnext" id="coverNext" href="#fechas" hidden></a>
     <ul class="csoc" id="coverSoc"></ul>
+  </div>
+</section>
+
+<!-- BIO -->
+<section id="bio" class="bio" aria-label="Bio">
+  <div class="wrap">
+    <span class="mark" aria-hidden="true"></span><span class="kicker">Bio</span>
+    <p class="bio-lead">MC y compositor del sur de Buenos Aires. Casi veinte años escribiendo rap lírico y conceptual, de raíz boom bap y underground.</p>
+    <p class="bio-txt">Se formó en el movimiento Halabalusa y en la crew La Conección Real. Encuentra la poesía en lo cotidiano y une a la vieja escuela, que busca lírica y concepto, con las nuevas audiencias de la cultura hip-hop. Su obra va de Puño Arriba y Literal a Faina, IV Mundo con Jonas Sanche y Decisiones con Norick.</p>
+    <p class="bio-live">En vivo: Argentina · Chile · Colombia · Uruguay · Perú</p>
   </div>
 </section>
 
