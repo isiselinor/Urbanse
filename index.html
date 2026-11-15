@@ -199,7 +199,7 @@ a.thumb:hover img{transform:scale(1.03)}
 .prod b{display:block;margin-top:8px;font:700 15px/1 var(--display)}
 .prod span{display:flex;justify-content:space-between;margin-top:4px;font-size:12px;color:#555}
 .prod span em{font-style:normal;font-weight:700;color:var(--red-deep)}
-.soon{position:relative;height:250px}
+.soon{position:relative;width:min(100%,440px);aspect-ratio:4/5}
 .soon span{position:absolute;left:12px;bottom:12px;background:var(--ink);color:var(--white);padding:8px 10px;font:700 16px var(--display)}
 .countdown{display:flex;gap:6px;margin-top:12px}
 .countdown div{background:var(--ink);color:var(--white);padding:10px;min-width:70px;text-align:center;font:900 26px/1 var(--display)}
@@ -583,7 +583,7 @@ function renderMerch(list){
   const now = new Date(), items = list.filter(m => m.producto && !hidden(m.publicar));
   const cfg = parseDate(CONFIG.MERCH_LANZAMIENTO), target = cfg && cfg > now ? cfg : null;
   if(!items.length){
-    $("merch").innerHTML = `<div class="soon duo"><img src="img/galeria-2.jpg" alt="Urbanse apoyado en una pared de ladrillo" loading="lazy" style="object-position:50% 60%"><span>Nueva colección muy pronto</span></div><div id="mcd">${target?cd(target):""}</div>`;
+    $("merch").innerHTML = `<div class="soon duo"><img src="img/galeria-2.jpg" alt="Urbanse apoyado en una pared de ladrillo" loading="lazy" style="object-position:50% 40%"><span>Nueva colección muy pronto</span></div><div id="mcd">${target?cd(target):""}</div>`;
     if(target) mTimer = setInterval(() => { const c=$("mcd"); if(c) c.innerHTML = cd(target); }, 30000);
     return;
   }
