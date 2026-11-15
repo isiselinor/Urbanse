@@ -12,7 +12,7 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23D71D22'/%3E%3Ctext x='16' y='24' font-family='serif' font-weight='900' font-size='22' text-anchor='middle' fill='%23000'%3EU%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@600;700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@600;700;800;900&family=Inter:wght@400;500;600&family=Permanent+Marker&display=swap" rel="stylesheet">
 <style>
 /* ===== Sistema Urbanse (presskit 2026) ===== */
 :root{
@@ -224,14 +224,16 @@ a.thumb:hover img{transform:scale(1.03)}
 .store{background:var(--ink);color:var(--white);padding:22px;display:grid;gap:26px}
 .prob{display:grid;gap:18px}
 .prob .stage{position:relative;width:100%;padding:14px 0 8px}
-.pola{position:relative;margin:0 6%;background:var(--paper);padding:12px 12px 52px;transform:rotate(var(--r,-3deg));box-shadow:0 14px 26px rgba(0,0,0,.55);animation:pola-in .5s cubic-bezier(.2,.8,.2,1)}
-@keyframes pola-in{from{opacity:0;transform:translateY(-14px) rotate(calc(var(--r,-3deg) * -2))}}
-.pola .ph{position:relative;width:100%;aspect-ratio:1;background:radial-gradient(circle at 50% 40%,#5a5a5a,#2a2a2a 70%);overflow:hidden}
-.pola .ph::after{content:"";position:absolute;inset:0;background:linear-gradient(160deg,rgba(255,255,255,.14),transparent 45%);pointer-events:none}
-.pola .ph>svg{position:absolute;inset:8% 10%;width:80%;height:84%}
+.pola{position:relative;margin:0 6%;background:#F4F1EA;padding:13px 13px 60px;transform:rotate(var(--r,-3deg));box-shadow:0 1px 0 #fff inset,0 18px 30px rgba(0,0,0,.6),0 2px 4px rgba(0,0,0,.4);animation:pola-in .55s cubic-bezier(.2,.8,.2,1)}
+@keyframes pola-in{from{opacity:0;transform:translateY(-16px) rotate(calc(var(--r,-3deg) * -2))}}
+.pola .ph{position:relative;width:100%;aspect-ratio:1;overflow:hidden;background:radial-gradient(60% 22% at 50% 92%,rgba(0,0,0,.45),transparent 70%),linear-gradient(180deg,#6a6866 0%,#4a4846 58%,#3a3836 59%,#2c2a28 100%);box-shadow:inset 0 0 0 1px rgba(0,0,0,.25)}
+.pola .ph::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(120% 90% at 50% 40%,transparent 55%,rgba(0,0,0,.45)),url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E");mix-blend-mode:overlay;opacity:.9}
+.pola .ph>svg{position:absolute;inset:6% 8% 8%;width:84%;height:86%;filter:drop-shadow(0 10px 10px rgba(0,0,0,.45))}
 .pola .ph>img{width:100%;height:100%;object-fit:cover}
-.pola .cp{position:absolute;left:14px;right:14px;bottom:15px;font:800 16px var(--display);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pola .tape{position:absolute;left:50%;top:-13px;width:92px;height:26px;transform:translateX(-50%) rotate(4deg);background:rgba(217,195,160,.85);z-index:2}
+.pola .ph .mlogo{width:30%;filter:drop-shadow(0 1px 0 rgba(0,0,0,.3))}
+.pola .cp{position:absolute;left:16px;right:16px;bottom:16px;display:flex;justify-content:space-between;align-items:baseline;gap:10px;font:400 22px/1 "Permanent Marker",var(--display);color:#1a1a1a;transform:rotate(-1.5deg)}
+.pola .cp small{font:inherit;font-size:16px;color:var(--red-deep);white-space:nowrap}
+.pola .tape{position:absolute;left:50%;top:-14px;width:96px;height:28px;transform:translateX(-50%) rotate(4deg);z-index:2;border:0;background:linear-gradient(180deg,rgba(236,224,196,.92),rgba(214,196,160,.88));box-shadow:0 1px 2px rgba(0,0,0,.25);clip-path:polygon(0 8%,4% 0,9% 10%,14% 0,100% 0,96% 12%,100% 22%,96% 34%,100% 46%,96% 58%,100% 70%,96% 82%,100% 92%,95% 100%,0 100%,4% 88%,0 76%,4% 64%,0 52%,4% 40%,0 28%,4% 16%)}
 #probInfo{min-width:0}
 .mlogo{position:absolute;left:50%;transform:translate(-50%,-50%);width:32%}
 .mlogo svg{display:block;width:100%;height:auto}.mlogo svg *{fill:currentColor}
@@ -697,13 +699,28 @@ $("merch").addEventListener("click", e => {
 });
 
 /* Tienda: probador + pila de ropa doblada (misma lógica que casetera + estante VHS) */
+const SH = (d,o,w) => `<path d="${d}" fill="none" stroke="#000" stroke-opacity="${o}" stroke-width="${w}" stroke-linecap="round"/>`;
+const HL = (d,o,w) => `<path d="${d}" fill="none" stroke="#fff" stroke-opacity="${o}" stroke-width="${w}" stroke-linecap="round"/>`;
 const SHAPES = {
-  remera:'<path d="M62 22 L86 12 Q100 26 114 12 L138 22 L178 52 L160 80 L144 70 L144 186 L56 186 L56 70 L40 80 L22 52 Z"/>',
-  buzo:'<path d="M56 34 Q100 -4 144 34 L180 66 L182 176 L160 180 L154 86 L148 86 L148 190 L52 190 L52 86 L46 86 L40 180 L18 176 L20 66 Z"/>',
-  tote:'<path d="M70 60 Q70 16 100 16 Q130 16 130 60" fill="none" stroke="currentColor" stroke-width="7"/><rect x="40" y="58" width="120" height="132"/>',
-  gorra:'<path d="M40 120 Q40 50 100 48 Q160 50 160 120 Z"/><path d="M30 120 L188 120 Q196 132 180 138 L30 134 Z"/>'
+  remera:'<path d="M64 26 C74 22 82 18 86 16 Q100 31 114 16 C118 18 126 22 136 26 L177 50 Q172 67 162 80 L143 71 L144 184 Q100 190 56 184 L57 71 L38 80 Q28 67 23 50 Z"/>'
+    + '<path d="M57 71 L69 75 L66 184 L56 184 Z M143 71 L131 75 L134 184 L144 184 Z" fill="#000" fill-opacity=".2"/>'
+    + SH("M86 16 Q100 35 114 16",.45,4) + HL("M89 19 Q100 30 111 19",.18,1.5)
+    + SH("M57 71 Q61 48 64 27",.3,1.5) + SH("M143 71 Q139 48 136 27",.3,1.5)
+    + SH("M27 54 L40 60",.25,1.5) + SH("M173 54 L160 60",.25,1.5)
+    + SH("M58 179 Q100 186 142 179",.3,2),
+  buzo:'<path d="M58 34 L72 28 Q84 44 100 46 Q116 44 128 28 L142 34 L181 70 Q186 120 183 176 L162 179 L157 94 L151 94 L151 185 Q100 191 49 185 L49 94 L43 94 L38 179 L17 176 Q14 120 19 70 Z"/>'
+    + '<path d="M72 28 Q100 -6 128 28 Q116 44 100 46 Q84 44 72 28 Z"/><path d="M72 28 Q100 -6 128 28 Q116 44 100 46 Q84 44 72 28 Z" fill="#000" fill-opacity=".22"/>'
+    + '<path d="M49 94 L60 96 L58 185 L49 185 Z M151 94 L140 96 L142 185 L151 185 Z" fill="#000" fill-opacity=".2"/>'
+    + HL("M92 46 L90 78",.55,2) + HL("M108 46 L110 78",.55,2)
+    + SH("M68 140 L132 140 L138 172 L62 172 Z",.3,2) + SH("M50 176 L150 176",.3,2) + SH("M18 168 L38 170 M162 170 L182 168",.3,2)
+    ,
+  tote:'<path d="M74 62 Q72 18 100 16 Q128 18 126 62" fill="none" stroke="currentColor" stroke-width="8"/><path d="M40 58 L160 58 L162 190 L38 190 Z"/>'
+    + SH("M74 62 Q72 18 100 16 Q128 18 126 62",.25,1.5) + SH("M40 64 L160 64",.25,2) + SH("M120 60 Q126 120 118 188",.12,8),
+  gorra:'<path d="M42 122 Q40 52 100 48 Q160 52 158 122 Z"/><path d="M30 120 Q110 112 190 124 Q196 134 182 140 Q110 132 32 136 Z"/>'
+    + SH("M100 48 L100 120 M70 58 Q62 90 66 120 M130 58 Q138 90 134 120",.28,1.5) + '<circle cx="100" cy="49" r="4" fill="#000" fill-opacity=".35"/>'
+    + SH("M32 132 Q110 126 186 136",.3,2) + HL("M60 70 Q80 56 100 54",.12,5)
 };
-const LOGO_TOP = {remera:"36%", buzo:"40%", tote:"60%", gorra:"58%"};
+const LOGO_TOP = {remera:"40%", buzo:"52%", tote:"62%", gorra:"58%"};
 const MERCH_DEMO = [
   {producto:"Remera negra", detalle:"Algodón · logo gótico en rojo", forma:"remera", color:"#0E0E0E", tinta:"#D71D22", talles:"S,M,L,XL"},
   {producto:"Buzo rojo", detalle:"Frisa · logo gótico en negro", forma:"buzo", color:"#D71D22", tinta:"#0E0E0E", talles:"S,M,L,XL"},
@@ -725,7 +742,7 @@ function renderProbador(){
   const tl = String(m.talles||"").split(",").map(t => t.trim()).filter(Boolean);
   const url = safeUrl(m.link_compra), out = agotado(m), precio = m.precio || "$ —";
   const tilt = [-3, 2, -1.5, 3, -2.5][mSel % 5];
-  $("probStage").innerHTML = `<div class="pola" style="--r:${tilt}deg"><span class="tape" aria-hidden="true"></span><div class="ph">${merchArt(m)}</div><div class="cp">${esc(m.producto)} · ${out ? "Agotado" : esc(precio)}</div></div>`;
+  $("probStage").innerHTML = `<div class="pola" style="--r:${tilt}deg"><span class="tape" aria-hidden="true"></span><div class="ph">${merchArt(m)}</div><div class="cp"><span>${esc(m.producto)}</span><small>${out ? "Agotado" : esc(precio)}</small></div></div>`;
   $("probInfo").innerHTML = `<span class="now">En el probador</span><h3>${esc(m.producto)}</h3><p class="meta">${esc([m.detalle, mDemo ? "Ejemplo" : ""].filter(Boolean).join(" · "))}</p>
     <div class="sizes">${tl.length ? tl.map((t,i) => `<button type="button" class="${i===Math.min(1,tl.length-1)?"on":""}">${esc(t)}</button>`).join("") : `<span class="on">Talle único</span>`}</div>
     ${out ? `<span class="cta off">Agotado</span>` : url ? `<a class="cta" href="${esc(url)}" target="_blank" rel="noopener">Comprar · ${esc(precio)}</a>` : `<span class="cta">${mDemo ? "Comprar · $ —" : "Muy pronto"}</span>`}`;
