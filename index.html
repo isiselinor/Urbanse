@@ -255,12 +255,12 @@ footer{position:relative;overflow:hidden;background:var(--ink);border-top:1px so
   .topnav nav a:hover,.topnav nav a.on{color:var(--red)}
   /* portada: logo arriba, a la izquierda el texto y a la derecha la foto vertical entera */
   /* portada escritorio: misma composición que en el teléfono, centrada como un afiche */
-  .cover{min-height:0;display:block}
+  .cover{height:100svh;min-height:640px;display:flex;flex-direction:column}
   .cover>*{width:min(100%,820px,calc((100svh - 270px) * 1.2 + 96px));margin-inline:auto}
   .cover .top{padding-top:22px}
   .cover .meta{font-size:15px;padding-bottom:22px}
-  .cover .grid{display:block}
-  .cover .photo{min-height:0;height:max(600px,calc(100svh - 270px));margin:0 var(--pad)}
+  .cover .grid{flex:1;min-height:0;display:flex;flex-direction:column}
+  .cover .photo{flex:1;min-height:0;height:auto;margin:0 var(--pad)}
   .cover .photo img{object-position:50% 0}
   .cover .left{display:none}
   /* costados de la portada: textos verticales, próximo show y redes */
