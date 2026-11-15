@@ -200,6 +200,20 @@ a.thumb:hover img{transform:scale(1.03)}
 .prod b{display:block;margin-top:8px;font:700 15px/1 var(--display)}
 .prod span{display:flex;justify-content:space-between;margin-top:4px;font-size:12px;color:#555}
 .prod span em{font-style:normal;font-weight:700;color:var(--red-deep)}
+.demo-note{font-size:13px;color:#555;margin:0 0 16px}
+.mgrid2{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.prod2 .ph2{position:relative;display:block;aspect-ratio:1;overflow:hidden}
+.prod2 .ph2>svg{position:absolute;inset:10% 12%;width:76%;height:80%}
+.prod2 .mlogo{position:absolute;left:50%;transform:translate(-50%,-50%);width:30%}
+.prod2 .mlogo svg{display:block;width:100%;height:auto;fill:currentColor}
+.prod2 .mlogo svg *{fill:currentColor}
+.prod2 .ref{position:absolute;left:8px;top:8px;background:var(--ink);color:var(--white);font:700 10px var(--display);font-style:normal;padding:3px 6px}
+.prod2 b{display:block;margin-top:10px;font:700 16px var(--display)}
+.prod2>span:last-child{display:flex;flex-direction:column;gap:2px;margin-top:4px;font-size:12px;color:#555}
+.prod2 i{font-style:normal;font-weight:700;color:var(--red-deep);white-space:nowrap}
+.mvin{position:absolute;inset:16% 22% 16% 10%}
+.mvin img{position:relative;z-index:1;width:100%;height:100%;object-fit:cover;box-shadow:4px 0 12px rgba(0,0,0,.35)}
+.disc2{position:absolute;top:4%;left:30%;width:92%;height:92%;border-radius:50%;background:radial-gradient(circle,#D71D22 0 16%,#0b0b0b 16.5% 18%,transparent 18.5%),repeating-radial-gradient(circle,#141414 0 1px,#1f1f1f 1.5px 3px)}
 .soon{position:relative;width:min(100%,440px);aspect-ratio:4/5}
 .soon span{position:absolute;left:12px;bottom:12px;background:var(--ink);color:var(--white);padding:8px 10px;font:700 16px var(--display)}
 .countdown{display:flex;gap:6px;margin-top:12px}
@@ -290,6 +304,8 @@ footer{position:relative;overflow:hidden;background:var(--ink);border-top:1px so
   .deck-info b{font-size:34px}
   .disc,.disc .sq{width:168px}.disc .sq{height:168px}.disc{margin-right:-40px}
   .prods .rail{flex-wrap:wrap;overflow:visible;margin:0;padding:0}
+  .mgrid2{grid-template-columns:repeat(4,1fr);gap:20px}
+  .prod2>span:last-child{flex-direction:row;justify-content:space-between;gap:8px}
   .fgrid{display:grid;grid-template-columns:1fr 1.3fr;gap:40px;align-items:start}
   .fgrid .ask{margin-top:0}
   .bgrid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start}
@@ -443,6 +459,7 @@ const CONFIG = {
   SHEET_API_URL: "",
   SPOTIFY_ARTIST_ID: "66X3l109SsMthurq0pHk3g",
   MERCH_LANZAMIENTO: "",
+  MERCH_DEMO: true, /* productos de referencia mientras no haya merch en la planilla. Poner en false antes de publicar en producción */
   REDES: { instagram:"https://www.instagram.com/urbanse/", tiktok:"https://www.tiktok.com/@elurbanse", spotify:"https://open.spotify.com/artist/66X3l109SsMthurq0pHk3g", youtube:"https://youtube.com/channel/UCWUkiZdLRdWJVyCVCgIRuqw", x:"https://x.com/urbanse", facebook:"https://www.facebook.com/UrbanseOficial/" }
 };
 const FALLBACK = { fechas:[
@@ -610,6 +627,7 @@ function renderMerch(list){
   clearInterval(mTimer);
   const now = new Date(), items = list.filter(m => m.producto && !hidden(m.publicar));
   const cfg = parseDate(CONFIG.MERCH_LANZAMIENTO), target = cfg && cfg > now ? cfg : null;
+  if(!items.length && CONFIG.MERCH_DEMO){ renderMerchDemo(); return; }
   if(!items.length){
     $("merch").innerHTML = `<div class="soon duo"><img src="img/galeria-2.jpg" alt="Urbanse apoyado en una pared de ladrillo" loading="lazy" style="object-position:50% 40%"><span>Nueva colección muy pronto</span></div><div id="mcd">${target?cd(target):""}</div>`;
     if(target) mTimer = setInterval(() => { const c=$("mcd"); if(c) c.innerHTML = cd(target); }, 30000);
@@ -618,6 +636,22 @@ function renderMerch(list){
   $("merch").innerHTML = `<div class="rail">${items.map(m => { const url=safeUrl(m.link_compra), img=safeUrl(m.imagen_url), ld=parseDate(m.lanzamiento);
     const note = ld && ld > now ? `Sale el ${pad(ld.getDate())} ${MESES[ld.getMonth()]}` : esc(m.estado||"");
     return `<a class="prod" ${url?`href="${esc(url)}" target="_blank" rel="noopener"`:""}><span class="ph">${img?`<img src="${esc(img)}" alt="${esc(m.producto)}" loading="lazy">`:""}</span><b>${esc(m.producto)}</b><span>${note}<em>${esc(m.precio)}</em></span></a>`; }).join("")}</div>`;
+}
+
+function renderMerchDemo(){
+  const logo = (document.querySelector(".cover h1 svg")||{}).outerHTML || "";
+  const TEE = '<path d="M62 22 L86 12 Q100 26 114 12 L138 22 L178 52 L160 80 L144 70 L144 186 L56 186 L56 70 L40 80 L22 52 Z"/>';
+  const HOOD = '<path d="M56 34 Q100 -4 144 34 L180 66 L182 176 L160 180 L154 86 L148 86 L148 190 L52 190 L52 86 L46 86 L40 180 L18 176 L20 66 Z"/><path d="M76 34 Q100 58 124 34" fill="none" stroke="rgba(0,0,0,.35)" stroke-width="3"/>';
+  const TOTE = '<path d="M70 60 Q70 16 100 16 Q130 16 130 60" fill="none" stroke="currentColor" stroke-width="7"/><rect x="40" y="58" width="120" height="132"/>';
+  const P = [
+    {t:"Remera negra", d:"Logo gótico en rojo", bg:"#E3DFD7", fill:"#0E0E0E", ink:"#D71D22", shape:TEE, top:"36%"},
+    {t:"Buzo rojo", d:"Logo gótico en negro", bg:"#0E0E0E", fill:"#D71D22", ink:"#0E0E0E", shape:HOOD, top:"40%"},
+    {t:"Tote bag", d:"Tela cruda, logo en negro", bg:"#D71D22", fill:"#F2F0EC", ink:"#0E0E0E", shape:TOTE, top:"58%"},
+    {t:"Vinilo Faina", d:"Edición en vinilo", bg:"#E3DFD7", vinyl:true}
+  ];
+  $("merch").innerHTML = `<p class="demo-note">Vista de referencia: productos y diseños de ejemplo, sin precios ni stock reales.</p><div class="mgrid2">${P.map(m => `<div class="prod2"><span class="ph2" style="background:${m.bg}">${m.vinyl
+      ? `<span class="mvin"><span class="disc2"></span><img src="${SC}ab67616d0000b2734294b259b8951211891a63fc" alt=""></span>`
+      : `<svg viewBox="0 0 200 200" style="color:${m.fill};fill:${m.fill}">${m.shape}</svg><span class="mlogo" style="top:${m.top};color:${m.ink}">${logo}</span>`}<em class="ref">Ejemplo</em></span><b>${esc(m.t)}</b><span>${esc(m.d)}<i>Precio a confirmar</i></span></div>`).join("")}</div>`;
 }
 
 /* ---------- Booking ---------- */
