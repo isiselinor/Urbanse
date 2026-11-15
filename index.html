@@ -78,6 +78,7 @@ h2{font:900 clamp(44px,6vw,80px)/.9 var(--display);letter-spacing:-.04em;text-tr
 .cover .photo img{position:absolute;inset:0;object-position:50% 38%}
 .cover .cue{position:absolute;left:50%;bottom:76px;transform:translateX(-50%);font:600 12px var(--display);color:var(--white);opacity:.85}
 
+.cside{display:none}
 /* ===== Videos ===== */
 #videos{background:var(--ink)}
 .feature{display:block;margin-top:20px}
@@ -262,6 +263,24 @@ footer{position:relative;overflow:hidden;background:var(--ink);border-top:1px so
   .cover .photo{min-height:0;height:max(600px,calc(100svh - 270px));margin:0 var(--pad)}
   .cover .photo img{object-position:50% 0}
   .cover .left{display:none}
+  /* costados de la portada: textos verticales, próximo show y redes */
+  .cover{position:relative}
+  .cside{display:block;position:absolute;inset:0;width:auto!important;margin:0!important;pointer-events:none;z-index:5}
+  .cside>*{pointer-events:auto}
+  .cv{position:absolute;top:250px;writing-mode:vertical-rl;font:700 15px var(--display);letter-spacing:.06em;white-space:nowrap;color:var(--ink)}
+  .cv-l{left:44px;transform:rotate(180deg)}
+  .cv-r{right:44px}
+  a.cv-r:hover{color:var(--white)}
+  .cnext{position:absolute;left:96px;top:calc(100svh - 44px);transform:translateY(-100%);display:block;color:var(--ink)}
+  .cnext small{display:block;font:700 12px var(--display);margin-bottom:6px}
+  .cnext b{display:block;font:900 46px/1 var(--display);letter-spacing:-.02em}
+  .cnext span{display:block;font:700 17px var(--display);margin:4px 0 10px}
+  .cnext em{font:700 14px var(--display);font-style:normal;border-bottom:2px solid var(--ink)}
+  .cnext:hover em{color:var(--white);border-color:var(--white)}
+  .csoc{position:absolute;right:96px;top:calc(100svh - 44px);transform:translateY(-100%);display:flex;flex-direction:column;align-items:flex-end;gap:8px;list-style:none;margin:0;padding:0}
+  .csoc a{display:flex;align-items:center;gap:8px;font:700 14px var(--display);color:var(--ink)}
+  .csoc svg{width:16px;height:16px;fill:currentColor}
+  .csoc a:hover{color:var(--white)}
   .more span{display:none}
   .cover .cue{display:none}
   /* videos: destacado + tarjetas al lado */
@@ -298,6 +317,12 @@ footer{position:relative;overflow:hidden;background:var(--ink);border-top:1px so
   <div class="grid">
     <div class="left"><p>Rap lírico y conceptual desde el sur de Buenos Aires. Casi veinte años de rimas, discos y escenarios.</p></div>
     <div class="photo duo hero" id="hero"><img class="main" src="img/hero-v2.webp" alt="Urbanse frente a un edificio de ladrillo en Buenos Aires" fetchpriority="high"><span class="grain" aria-hidden="true"></span></div>
+  </div>
+  <div class="cside" aria-hidden="false">
+    <span class="cv cv-l">MC · Sur de Buenos Aires</span>
+    <a class="cv cv-r" href="#musica"><b>Nuevo:</b> Faina — EP 2024 · ▶ Escuchar</a>
+    <a class="cnext" id="coverNext" href="#fechas" hidden></a>
+    <ul class="csoc" id="coverSoc"></ul>
   </div>
 </section>
 
@@ -547,6 +572,9 @@ let SHOWS = [], cdTimer;
 function renderShows(list){
   const today = new Date(); today.setHours(0,0,0,0);
   SHOWS = list.map(r => ({...r, _d: parseDate(r.fecha)})).filter(r => r._d && r._d >= today && !hidden(r.publicar)).sort((a,b) => a._d - b._d);
+  const cn = $("coverNext"), nx = SHOWS[0];
+  cn.hidden = !nx;
+  if(nx) cn.innerHTML = `<small>Próximo show</small><b>${pad(nx._d.getDate())} ${MESES[nx._d.getMonth()]}</b><span>${esc([nx.ciudad, nx.pais].filter(Boolean).join(", "))}</span><em>Ver fechas →</em>`;
   $("shows").innerHTML = !SHOWS.length ? `<div class="empty">Nuevas fechas muy pronto</div>` : SHOWS.map(s => {
     const url = safeUrl(s.link_entradas), st = String(s.estado||"").trim();
     const act = /agotad|sold/i.test(st) ? `<span class="st out">Agotado</span>` : url ? `<a class="tix" href="${esc(url)}" target="_blank" rel="noopener">Entradas</a>` : `<span class="st">${esc(st || "Pronto")}</span>`;
@@ -596,6 +624,7 @@ function renderMerch(list){
 
 /* ---------- Redes ---------- */
 function renderSocials(){
+  $("coverSoc").innerHTML = ["instagram","tiktok","youtube","spotify"].filter(k => safeUrl(REDES[k])).map(k => `<li><a href="${esc(safeUrl(REDES[k]))}" target="_blank" rel="noopener">${LABELS[k][0]}<svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[k]}</svg></a></li>`).join("");
   $("socials").innerHTML = Object.keys(LABELS).filter(k => safeUrl(REDES[k])).map(k => `<li><a href="${esc(safeUrl(REDES[k]))}" target="_blank" rel="noopener"><span><svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[k]}</svg>${LABELS[k][0]}</span><i>${esc(LABELS[k][1])}</i></a></li>`).join("");
 }
 
