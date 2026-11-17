@@ -23,7 +23,7 @@ const CACHE_SECONDS = 300;                       // la landing se actualiza como
 const TABS = {
   Fechas:  ["fecha", "hora", "ciudad", "pais", "venue", "evento", "link_entradas", "estado", "publicar"],
   Videos:  ["titulo", "youtube_url", "tipo", "fecha", "descripcion", "link_escuchar", "destacado", "publicar", "ft", "verso"],
-  Merch:   ["producto", "detalle", "tipo", "precio", "imagen_url", "imagen_url_2", "talles", "color", "tinta", "link_compra", "estado", "publicar", "lanzamiento"],
+  Merch:   ["producto", "detalle", "tipo", "precio", "imagen_url", "imagen_url_2", "talles", "color", "tinta", "link_compra", "estado", "publicar", "lanzamiento", "stock"],
   Redes:   ["red", "url"],
   Booking: ["recibido", "motivo", "nombre", "organizacion", "email", "whatsapp", "ciudad", "pais", "tipo_evento",
             "formato", "fecha_tentativa", "venue_capacidad", "presupuesto", "mensaje", "origen", "estado_seguimiento", "notas"],
@@ -68,6 +68,8 @@ function setup() {
   ss.getSheetByName("Videos").getRange("C2:C").setDataValidation(
     SpreadsheetApp.newDataValidation().requireValueInList(["Videoclip", "Sesión en vivo", "Película", "Nuevo lanzamiento", "Colaboración"], true).build());
   ss.getSheetByName("Merch").getRange("L2:L").setDataValidation(siNo);
+  ss.getSheetByName("Merch").getRange("N2:N").setDataValidation(
+    SpreadsheetApp.newDataValidation().requireNumberGreaterThanOrEqualTo(0).setAllowInvalid(false).build());
   ss.getSheetByName("Merch").getRange("C2:C").setDataValidation(
     SpreadsheetApp.newDataValidation().requireValueInList(["remera", "buzo", "cd", "vinilo", "gorra", "tote", "otro"], true).build());
   ss.getSheetByName("Merch").getRange("K2:K").setDataValidation(

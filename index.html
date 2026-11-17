@@ -246,6 +246,7 @@ a.thumb:hover img{transform:scale(1.03)}
 .mlogo svg{display:block;width:100%;height:auto}.mlogo svg *{fill:currentColor}
 #probInfo .now{display:block;font:700 12px var(--display);color:var(--red);margin-bottom:6px}
 #probInfo h3{font:800 30px/1.05 var(--display);letter-spacing:-.02em;margin:0}
+#probInfo .last{display:table;margin:-6px 0 14px;background:var(--red);color:var(--ink);font:700 12px var(--display);padding:4px 8px}
 #probInfo .meta{color:var(--gray);font-size:14px;margin:6px 0 16px}
 .sizes{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
 .sizes button,.sizes span{min-width:42px;padding:9px 10px;text-align:center;border:1px solid var(--line);color:var(--white);font:700 13px var(--display)}
@@ -754,14 +755,16 @@ function merchArt(m){
   const light = /F2F0EC/i.test(m.color||"");
   return `<svg viewBox="0 0 200 200" style="color:${esc(m.color)};fill:${esc(m.color)};${light?"stroke:#0E0E0E;stroke-width:2":""}" aria-hidden="true">${SHAPES[f]}</svg><span class="mlogo" style="top:${LOGO_TOP[f]};color:${esc(m.tinta)}">${logo}</span>`;
 }
-const agotado = m => /agotad|sold/i.test(m.estado||"");
+const stockN = m => { const v = String(m.stock ?? "").trim(); return v === "" || isNaN(+v) ? null : +v; };
+const agotado = m => /agotad|sold/i.test(m.estado||"") || stockN(m) === 0;
+const ultimas = m => { const n = stockN(m); return n !== null && n > 0 && n <= 5 ? (n === 1 ? "Última unidad" : `Últimas ${n}`) : ""; };
 function renderProbador(){
   const m = MERCH[mSel]; if(!m) return;
   const tl = String(m.talles||"").split(",").map(t => t.trim()).filter(Boolean);
   const url = safeUrl(m.link_compra), out = agotado(m), precio = m.precio || "$ —";
   const tilt = [-3, 2, -1.5, 3, -2.5][mSel % 5];
   $("probStage").innerHTML = `<div class="shot">${merchArt(m)}</div>`;
-  $("probInfo").innerHTML = `<span class="now">En el probador</span><h3>${esc(m.producto)}</h3><p class="meta">${esc([m.detalle, mDemo ? "Ejemplo" : ""].filter(Boolean).join(" · "))}</p>
+  $("probInfo").innerHTML = `<span class="now">En el probador</span><h3>${esc(m.producto)}</h3><p class="meta">${esc([m.detalle, mDemo ? "Ejemplo" : ""].filter(Boolean).join(" · "))}</p>${!out && ultimas(m) ? `<p class="last">${ultimas(m)}</p>` : ""}
     ${(m.imagen2 || m.imagen_url_2) ? `<div class="sizes lados"><button type="button" data-lado="0" class="${mLado?"":"on"}">Frente</button><button type="button" data-lado="1" class="${mLado?"on":""}">Espalda</button></div>` : ""}
     ${tl.length ? `<div class="sizes">${tl.map((t,i) => `<button type="button" class="${i===Math.min(1,tl.length-1)?"on":""}">${esc(t)}</button>`).join("")}</div>` : ""}
     ${out ? `<span class="cta off">Agotado</span>` : url ? `<a class="cta" href="${esc(url)}" target="_blank" rel="noopener">Comprar · ${esc(precio)}</a>` : CONFIG.MERCH_PEDIDOS ? `<a class="cta" href="${esc(CONFIG.MERCH_PEDIDOS)}" target="_blank" rel="noopener">Pedir · ${esc(precio)}</a>` : `<span class="cta">Muy pronto</span>`}`;
@@ -771,7 +774,7 @@ function renderPile(){
   const logo = (document.querySelector(".cover h1 svg")||{}).outerHTML || "";
   $("pile").innerHTML = MERCH.map((m,i) => { const light = /F2F0EC/i.test(m.color||""), dark = /0E0E0E/i.test(m.color||"#0E0E0E");
     return `<button type="button" class="fold${i===mSel?" on":""}" data-i="${i}" style="background:${esc(m.color||"#1E1E1E")};color:${esc(m.tinta||"#F2F0EC")};${dark?"box-shadow:inset 0 0 0 1px #2A2A2A":""}" aria-label="Ver ${esc(m.producto)}">
-      <span class="lb"><b style="color:${light?"#0E0E0E":"inherit"}">${esc(m.producto)}</b><small style="color:${light?"#555":"inherit"}">${agotado(m) ? "Agotado" : esc(m.precio || (mDemo ? "$ — · Ejemplo" : "Pronto"))}</small></span><span class="mini">${logo}</span></button>`; }).join("");
+      <span class="lb"><b style="color:${light?"#0E0E0E":"inherit"}">${esc(m.producto)}</b><small style="color:${light?"#555":"inherit"}">${agotado(m) ? "Agotado" : esc([m.precio || (mDemo ? "$ — · Ejemplo" : "Pronto"), ultimas(m)].filter(Boolean).join(" · "))}</small></span><span class="mini">${logo}</span></button>`; }).join("");
 }
 /* ---------- Booking ---------- */
 
