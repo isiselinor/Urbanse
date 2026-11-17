@@ -23,14 +23,14 @@ const CACHE_SECONDS = 300;                       // la landing se actualiza como
 const TABS = {
   Fechas:  ["fecha", "hora", "ciudad", "pais", "venue", "evento", "link_entradas", "estado", "publicar"],
   Videos:  ["titulo", "youtube_url", "tipo", "fecha", "descripcion", "link_escuchar", "destacado", "publicar", "ft", "verso"],
-  Merch:   ["producto", "precio", "imagen_url", "link_compra", "estado", "publicar", "lanzamiento"],
+  Merch:   ["producto", "detalle", "tipo", "precio", "imagen_url", "imagen_url_2", "talles", "color", "tinta", "link_compra", "estado", "publicar", "lanzamiento"],
   Redes:   ["red", "url"],
   Booking: ["recibido", "motivo", "nombre", "organizacion", "email", "whatsapp", "ciudad", "pais", "tipo_evento",
             "formato", "fecha_tentativa", "venue_capacidad", "presupuesto", "mensaje", "origen", "estado_seguimiento", "notas"],
   Demanda: ["recibido", "ciudad", "pais", "email", "origen"]
 };
 
-const REDES_DEFAULT = ["instagram", "youtube", "spotify", "tiktok", "facebook", "apple_music", "whatsapp"];
+const REDES_DEFAULT = ["instagram", "tiktok", "youtube", "spotify", "x", "facebook"];
 
 /* ---------- Configuración inicial ---------- */
 function setup() {
@@ -56,7 +56,7 @@ function setup() {
   const redes = ss.getSheetByName("Redes");
   if (redes.getLastRow() === 1) {
     redes.getRange(2, 1, REDES_DEFAULT.length, 2)
-      .setValues(REDES_DEFAULT.map(r => [r, r === "whatsapp" ? "https://wa.me/5491156516862" : ""]));
+      .setValues(REDES_DEFAULT.map(r => [r, ""]));
   }
   // Validaciones útiles
   const siNo = SpreadsheetApp.newDataValidation().requireValueInList(["si", "no"], true).build();
@@ -67,7 +67,11 @@ function setup() {
   ss.getSheetByName("Videos").getRange("G2:H").setDataValidation(siNo);
   ss.getSheetByName("Videos").getRange("C2:C").setDataValidation(
     SpreadsheetApp.newDataValidation().requireValueInList(["Videoclip", "Sesión en vivo", "Película", "Nuevo lanzamiento", "Colaboración"], true).build());
-  ss.getSheetByName("Merch").getRange("F2:F").setDataValidation(siNo);
+  ss.getSheetByName("Merch").getRange("L2:L").setDataValidation(siNo);
+  ss.getSheetByName("Merch").getRange("C2:C").setDataValidation(
+    SpreadsheetApp.newDataValidation().requireValueInList(["remera", "buzo", "cd", "vinilo", "gorra", "tote", "otro"], true).build());
+  ss.getSheetByName("Merch").getRange("K2:K").setDataValidation(
+    SpreadsheetApp.newDataValidation().requireValueInList(["Disponible", "Pronto", "Agotado"], true).build());
   ss.getSheetByName("Booking").getRange("O2:O").setDataValidation(
     SpreadsheetApp.newDataValidation().requireValueInList(["Nuevo", "Contactado", "Negociando", "Confirmado", "Descartado"], true).build());
   const def = ss.getSheetByName("Sheet1") || ss.getSheetByName("Hoja 1");

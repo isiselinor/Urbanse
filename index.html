@@ -747,7 +747,8 @@ const MERCH_BASE = [
 let MERCH = [], mSel = 0, mDemo = false, mLado = 0;
 const localImg = u => /^img\/[\w\/.-]+$/.test(String(u||"").trim()) ? String(u).trim() : "";
 function merchArt(m){
-  const src = mLado && (m.imagen2 || m.imagen_url_2) ? (localImg(m.imagen2) || safeUrl(m.imagen_url_2)) : (localImg(m.imagen) || safeUrl(m.imagen_url));
+  const pick = u => localImg(u) || safeUrl(u);
+  const src = mLado && (m.imagen2 || m.imagen_url_2) ? (pick(m.imagen2) || pick(m.imagen_url_2)) : (pick(m.imagen) || pick(m.imagen_url));
   if(src) return `<img class="${m.tipo==="cd"?"cd":""}" src="${esc(src)}" alt="${esc(m.producto)}${mLado?" (espalda)":""}">`;
   const f = SHAPES[m.forma] ? m.forma : "remera", logo = (document.querySelector(".cover h1 svg")||{}).outerHTML || "";
   const light = /F2F0EC/i.test(m.color||"");
