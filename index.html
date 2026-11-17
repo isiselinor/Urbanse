@@ -890,9 +890,10 @@ $("yr").textContent = new Date().getFullYear();
   const io = new IntersectionObserver(es => es.forEach(e => {
     if(!e.isIntersecting) return;
     const el = e.target; el.classList.add("in"); io.unobserve(el);
+    const h = el.parentNode && el.parentNode.querySelector(":scope > h2.rv"); if(h) h.classList.add("in");
     if(el.classList.contains("rv-stag")) setTimeout(() => el.classList.add("done"), 1400);
   }), {threshold:0.12, rootMargin:"0px 0px -6% 0px"});
-  document.querySelectorAll(".rv, .rv-stag, .rv-words").forEach(el => io.observe(el));
+  document.querySelectorAll(".rv, .rv-stag, .rv-words").forEach(el => { if(el.tagName !== "H2") io.observe(el); });
 })();
 </script>
 </body>
