@@ -20,6 +20,12 @@
 const NOTIFY_EMAIL = "Buenosaifers@gmail.com"; // deja "" para no recibir avisos por email
 const CACHE_SECONDS = 300;                       // la landing se actualiza como máximo cada 5 min
 
+/* Bandsintown: las fechas cargadas allí se suman a las de la pestaña Fechas (una sola lista).
+   BIT_APP_ID: se obtiene en Bandsintown for Artists › Settings › General › API (o pidiéndolo a Bandsintown).
+   Si una fecha está en los dos lados (mismo día y ciudad), manda la fila del Sheet. */
+const BIT_ARTIST = "Urbanse";   // nombre exacto del artista en Bandsintown
+const BIT_APP_ID = "";          // PENDIENTE: pegar aquí el app_id
+
 const TABS = {
   Fechas:  ["fecha", "hora", "ciudad", "pais", "venue", "evento", "link_entradas", "estado", "publicar"],
   Videos:  ["titulo", "youtube_url", "tipo", "fecha", "descripcion", "link_escuchar", "destacado", "publicar", "ft", "verso"],
@@ -96,7 +102,7 @@ function doGet() {
   const out = JSON.stringify({
     ok: true,
     actualizado: new Date().toISOString(),
-    fechas: rows_(ss, "Fechas"),
+    fechas: fechas_(ss),
     videos: rows_(ss, "Videos"),
     merch:  rows_(ss, "Merch"),
     redes:  redes,
@@ -185,6 +191,47 @@ function demanda_(ss) {
     count[k].n++;
   });
   return Object.keys(count).map(k => count[k]).sort((a, b) => b.n - a.n).slice(0, 8);
+}
+
+/* Fechas del Sheet + Bandsintown, sin duplicados */
+function fechas_(ss) {
+  const sheet = rows_(ss, "Fechas").map(r => Object.assign({ fuente: "sheet" }, r));
+  const bit = bandsintown_();
+  const norm = s => String(s || "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const ymd = v => { const d = v instanceof Date ? v : new Date(v); return isNaN(d) ? String(v).slice(0, 10) : Utilities.formatDate(d, Session.getScriptTimeZone(), "yyyy-MM-dd"); };
+  const ya = {}; sheet.forEach(r => { ya[ymd(r.fecha) + "|" + norm(r.ciudad)] = true; });
+  return sheet.concat(bit.filter(e => !ya[e.fecha + "|" + norm(e.ciudad)]));
+}
+
+const PAISES_ = { "Spain": "España", "Mexico": "México", "Peru": "Perú", "United States": "Estados Unidos", "Brazil": "Brasil", "Germany": "Alemania", "France": "Francia", "Italy": "Italia", "United Kingdom": "Reino Unido", "Dominican Republic": "República Dominicana", "Panama": "Panamá" };
+
+function bandsintown_() {
+  if (!BIT_APP_ID || !BIT_ARTIST) return [];
+  try {
+    const url = "https://rest.bandsintown.com/artists/" + encodeURIComponent(BIT_ARTIST) + "/events?date=upcoming&app_id=" + encodeURIComponent(BIT_APP_ID);
+    const res = UrlFetchApp.fetch(url, { muteHttpExceptions: true, headers: { accept: "application/json" } });
+    if (res.getResponseCode() !== 200) return [];
+    const list = JSON.parse(res.getContentText());
+    if (!Array.isArray(list)) return [];
+    return list.map(e => {
+      const v = e.venue || {}, dt = String(e.datetime || ""), offer = (e.offers || []).find(o => o && o.url) || {};
+      const status = String(offer.status || "").toLowerCase();
+      return {
+        fuente: "bandsintown",
+        fecha: dt.slice(0, 10),
+        hora: dt.slice(11, 16),
+        ciudad: v.city || "",
+        pais: PAISES_[v.country] || v.country || "",
+        venue: v.name || "",
+        evento: e.title || "",
+        link_entradas: offer.url || e.url || "",
+        estado: status === "sold out" ? "Agotado" : offer.url ? "A la venta" : "Próximamente",
+        publicar: "si"
+      };
+    }).filter(e => e.fecha);
+  } catch (err) {
+    return [];
+  }
 }
 
 /* Borra la caché al editar el Sheet, para que los cambios se vean enseguida */
