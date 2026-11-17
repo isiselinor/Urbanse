@@ -181,14 +181,28 @@ a.thumb:hover img{transform:scale(1.03)}
 #fechas .mark{background:var(--ink)}
 #fechas .kicker{color:var(--ink)}
 .fragA{position:absolute;right:-140px;top:150px;height:700px;width:auto;color:var(--ink);opacity:.12;pointer-events:none}
-.count{background:var(--ink);color:var(--white);padding:14px 14px 12px;margin-bottom:12px}
-.count .row{display:flex;justify-content:space-between;align-items:baseline;font:600 12px var(--display)}
-.count .row b{color:var(--red);font-weight:600}
-.count .row span{color:var(--gray)}
-.cells{display:flex;gap:6px;margin-top:10px}
-.cells div{flex:1;background:var(--ink3);padding:8px 6px;text-align:center;font:900 24px/1 var(--display);letter-spacing:-.02em}
-.cells small{display:block;margin-top:4px;font:600 10px var(--display);color:var(--red);letter-spacing:0}
-.count .btn{width:100%;margin-top:10px;padding:11px}
+.count{position:relative;background:linear-gradient(180deg,#1d1d1d,#121212);color:var(--white);padding:14px;margin-bottom:12px;border-radius:4px;box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 10px 24px rgba(0,0,0,.35)}
+.vc-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:10px;font:600 12px var(--display)}
+.vc-led{color:#ff3b30;font:600 13px ui-monospace,Menlo,Consolas,monospace;text-shadow:0 0 6px rgba(255,59,48,.55);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vc-date{color:var(--gray);font:700 12px var(--display)}
+.vc-win{background:#0a0606;border-radius:3px;padding:14px 12px 10px;box-shadow:inset 0 2px 6px rgba(0,0,0,.9),inset 0 0 0 1px #2a1414}
+.vc-digits{display:flex;align-items:center;justify-content:space-between}
+.vc-g{display:flex;gap:3px}
+.vc-d{width:clamp(22px,6.4vw,34px);height:auto}
+.vc-d path{fill:#2a0d0d}
+.vc-d path.on{fill:#ff2b25;filter:drop-shadow(0 0 3px rgba(255,43,37,.75))}
+.vc-col{display:flex;flex-direction:column;gap:12px;padding:0 2px}
+.vc-col i{width:5px;height:5px;background:#ff2b25;box-shadow:0 0 5px rgba(255,43,37,.8);animation:vc-blink 1s steps(1) infinite}
+@keyframes vc-blink{50%{opacity:.15}}
+.vc-lbl{display:flex;justify-content:space-between;margin-top:8px;padding:0 4px;font:600 10px ui-monospace,Menlo,Consolas,monospace;color:#a0423f}
+.vc-lbl span{flex:1;text-align:center}
+.vc-foot{display:flex;align-items:center;gap:12px;margin-top:12px}
+.vc-slot{flex:1;height:10px;background:#050505;border-radius:2px;box-shadow:inset 0 1px 3px #000,0 1px 0 #2a2a2a}
+.vc-rec{display:flex;align-items:center;gap:8px;padding:10px 14px;background:linear-gradient(180deg,#3a3a3a,#262626);color:var(--white);border-radius:3px;font:700 13px var(--display);box-shadow:0 2px 0 #0a0a0a,inset 0 1px 0 rgba(255,255,255,.12)}
+.vc-rec i{width:10px;height:10px;border-radius:50%;background:var(--red);box-shadow:0 0 6px rgba(215,29,34,.8)}
+.vc-rec:active{transform:translateY(2px);box-shadow:0 0 0 #0a0a0a}
+.vc-rec:hover{background:linear-gradient(180deg,#444,#2c2c2c)}
+@media (prefers-reduced-motion:reduce){.vc-col i{animation:none}}
 .shows{border-top:3px solid var(--ink)}
 .show{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:2px solid var(--ink)}
 .show .d{flex:none;width:54px;font:900 26px/.9 var(--display);letter-spacing:-.03em;text-transform:uppercase}
@@ -724,10 +738,18 @@ function renderShows(list){
   clearInterval(cdTimer);
   const n = SHOWS[0]; $("count").hidden = !n; if(!n) return;
   const hm = String(n.hora||"").match(/(\d{1,2}):(\d{2})/); const target = new Date(n._d); if(hm) target.setHours(+hm[1], +hm[2]); else target.setHours(21,0);
-  const draw = () => { const ms = Math.max(0, target - Date.now()); const d=Math.floor(ms/864e5), h=Math.floor(ms/36e5)%24, m=Math.floor(ms/6e4)%60, s=Math.floor(ms/1e3)%60;
-    $("count").innerHTML = `<div class="row"><b>Próximo show · ${esc(n.ciudad)}</b><span>${pad(n._d.getDate())} ${MESES[n._d.getMonth()]}</span></div><div class="cells">${[[d,"Días"],[pad(h),"Horas"],[pad(m),"Min"],[pad(s),"Seg"]].map(([v,l]) => `<div>${v}<small>${l}</small></div>`).join("")}</div><button class="btn" data-ics>Recordarme</button>`; };
+  $("count").innerHTML = `<div class="vc-top"><span class="vc-led">▶ Próximo show · ${esc(n.ciudad)}</span><span class="vc-date">${pad(n._d.getDate())} ${MESES[n._d.getMonth()]}</span></div>
+    <div class="vc-win" role="timer" aria-live="off"><div class="vc-digits" id="vcDigits"></div><div class="vc-lbl"><span>días</span><span>horas</span><span>min</span><span>seg</span></div></div>
+    <div class="vc-foot"><span class="vc-slot" aria-hidden="true"></span><button class="vc-rec" data-ics><i aria-hidden="true"></i>Recordarme</button></div>`;
+  const draw = () => { const ms = Math.max(0, target - Date.now()); const d=Math.min(99,Math.floor(ms/864e5)), h=Math.floor(ms/36e5)%24, m=Math.floor(ms/6e4)%60, s=Math.floor(ms/1e3)%60;
+    $("vcDigits").innerHTML = [pad(d),pad(h),pad(m),pad(s)].map(g => `<span class="vc-g">${[...g].map(seg7).join("")}</span>`).join('<span class="vc-col" aria-hidden="true"><i></i><i></i></span>');
+    $("vcDigits").setAttribute("aria-label", `Faltan ${d} días, ${h} horas y ${m} minutos`); };
   draw(); cdTimer = setInterval(() => { if(!document.hidden) draw(); }, 1000);
 }
+/* dígitos de 7 segmentos, como el contador de una casetera */
+const SEG = {0:"abcdef",1:"bc",2:"abged",3:"abgcd",4:"fgbc",5:"afgcd",6:"afgedc",7:"abc",8:"abcdefg",9:"abcdfg"};
+const SEGP = {a:"M7 3 L33 3 L29 8 L11 8 Z", b:"M34 5 L34 33 L30 30 L30 9 Z", c:"M34 39 L34 67 L30 63 L30 42 Z", d:"M7 69 L33 69 L29 64 L11 64 Z", e:"M6 39 L6 67 L10 63 L10 42 Z", f:"M6 5 L6 33 L10 30 L10 9 Z", g:"M8 36 L12 32 L28 32 L32 36 L28 40 L12 40 Z"};
+const seg7 = n => `<svg class="vc-d" viewBox="0 0 40 72" aria-hidden="true">${Object.keys(SEGP).map(k => `<path d="${SEGP[k]}" class="${SEG[n].includes(k)?"on":""}"/>`).join("")}</svg>`;
 function ics(s){
   const d = s._d, hm = String(s.hora||"").match(/(\d{1,2}):(\d{2})/), ymd = `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}`;
   const dt = hm ? `DTSTART:${ymd}T${pad(hm[1])}${hm[2]}00\r\nDURATION:PT3H` : `DTSTART;VALUE=DATE:${ymd}`;
