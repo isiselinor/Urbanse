@@ -225,7 +225,7 @@ a.thumb:hover img{transform:scale(1.03)}
 .prob{display:grid;gap:18px}
 .prob .stage{position:relative;width:100%;aspect-ratio:1;background:radial-gradient(closest-side,#2c2c2c,rgba(14,14,14,0) 100%)}
 .shot{position:absolute;inset:0;animation:shot-in .5s cubic-bezier(.2,.8,.2,1)}
-@keyframes shot-in{from{opacity:0;transform:translateY(12px) scale(.97)}}
+@keyframes shot-in{from{opacity:0;transform:translateX(var(--dx,0)) translateY(8px) scale(.97)}}
 .shot>img{position:absolute;inset:4%;width:92%;height:92%;object-fit:contain;filter:drop-shadow(0 18px 22px rgba(0,0,0,.6))}
 .shot>img.cd{inset:12% 2%;width:96%;height:76%}
 .shot>svg{position:absolute;inset:8% 10%;width:80%;height:84%}
@@ -263,6 +263,40 @@ a.thumb:hover img{transform:scale(1.03)}
 .fold small{display:block;font-size:11px;opacity:.8}
 .fold .mini{width:70px}.fold .mini svg{display:block;width:100%;height:auto}.fold .mini svg *{fill:currentColor}
 .fold:hover,.fold:focus-visible{transform:translateX(10px)}
+@media (max-width:899px){
+  .store{padding:16px;gap:14px}
+  .prob{display:contents}
+  .prob .stage{order:1;aspect-ratio:4/3}
+  .pilewrap{order:2}
+  #probInfo{order:3;padding-top:4px}
+  #probInfo h3{font-size:26px}
+  .pile-lbl{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;margin-bottom:8px}
+  .pile-lbl small{font:500 11px var(--body);color:var(--gray)}
+  .pile{gap:4px}
+  .fold{height:40px;padding:0 12px;grid-template-columns:1fr auto;width:calc(100% - 14px)}
+  .fold::before{width:30px;height:7px}
+  .fold::after{bottom:5px}
+  .fold .lb{display:flex;justify-content:space-between;align-items:baseline;gap:10px;width:100%}
+  .fold b{font-size:14px}
+  .fold small{font-size:12px;white-space:nowrap}
+  .fold .mini{display:none}
+  .fold:hover,.fold:focus-visible{transform:none}
+  .fold.on{transform:translateX(14px)}
+  .swipe-dots{display:flex;justify-content:center;gap:6px;position:absolute;left:0;right:0;bottom:6px}
+  .swipe-dots i{width:6px;height:6px;border-radius:50%;background:#3a3a3a}
+  .swipe-dots i.on{background:var(--red)}
+}
+@media (max-width:899px){
+  .deck{padding:16px;gap:12px}
+  .rec{width:48%}
+  .deck-info b{font-size:22px}
+  .deck-info>span{margin:2px 0 10px}
+  .spotify iframe{height:152px}
+  .crate{margin-top:18px}
+  .crate .cap{display:none}
+}
+.swipe-hint{display:block;font:500 11px var(--body);color:var(--gray);margin:-4px 0 10px}
+@media (min-width:900px){.swipe-dots,.pile-lbl small,.swipe-hint{display:none}}
 .fold.on{transform:translateX(22px)}
 .soon{position:relative;width:min(100%,440px);aspect-ratio:4/5}
 .soon span{position:absolute;left:12px;bottom:12px;background:var(--ink);color:var(--white);padding:8px 10px;font:700 16px var(--display)}
@@ -436,7 +470,7 @@ footer{position:relative;overflow:hidden;background:var(--ink);border-top:1px so
       </div>
       <div class="deck-info">
         <span class="now">Sonando</span>
-        <b id="deckT"></b><span id="deckS"></span>
+        <b id="deckT"></b><span id="deckS"></span><small class="swipe-hint">Desliza el vinilo o elige en la batea</small>
         <div class="spotify" id="spotifyBox"></div>
       </div>
     </div>
@@ -645,7 +679,19 @@ $("discs").addEventListener("click", e => {
 });
 const capOf = e => { const c = e.target.closest(".disc"); if(c) $("crateCap").textContent = c.dataset.cap; };
 $("discs").addEventListener("mouseover", capOf); $("discs").addEventListener("focusin", capOf);
-document.querySelectorAll("[data-d]").forEach(p => p.addEventListener("click", () => { setPills("[data-d]", p.dataset.d, "d"); renderDiscs(p.dataset.d); }));
+let DTAB = "discos";
+document.querySelectorAll("[data-d]").forEach(p => p.addEventListener("click", () => { DTAB = p.dataset.d; setPills("[data-d]", p.dataset.d, "d"); renderDiscs(p.dataset.d); }));
+/* Teléfono: deslizar el vinilo cambia de disco dentro de la batea abierta */
+(() => { let x0 = null, y0 = 0;
+  const deck = $("deck");
+  deck.addEventListener("touchstart", e => { if(!e.target.closest(".rec")) return; x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, {passive:true});
+  deck.addEventListener("touchend", e => { if(x0 === null) return; const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0; x0 = null;
+    if(Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy)) return;
+    const list = DISCOS[DTAB]; let i = list.findIndex(d => CUR && d.id === CUR.id); if(i < 0) i = -1;
+    const n = list[(i + (dx < 0 ? 1 : -1) + list.length) % list.length]; setDeck(n, true);
+    const b = document.querySelector(`#discs [data-album="${n.id}"]`); if(b){ const c = $("discs"); c.scrollTo({left: b.offsetLeft - 24, behavior:"smooth"}); }
+  }, {passive:true});
+})();
 let spotifyLoaded = false;
 function loadSpotify(){ if(spotifyLoaded) return; if(CUR){ spotifyLoaded = true; setDeck(CUR, false); return; } if(!CONFIG.SPOTIFY_ARTIST_ID) return; spotifyLoaded = true;
   $("spotifyBox").innerHTML = `<iframe src="https://open.spotify.com/embed/artist/${esc(CONFIG.SPOTIFY_ARTIST_ID)}?utm_source=generator&theme=0" title="Urbanse en Spotify" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>`; }
@@ -699,12 +745,12 @@ function renderMerch(list){
   MERCH = items.length ? items : (mDemo ? MERCH_DEMO : MERCH_BASE); mSel = 0; mLado = 0;
   $("merch").innerHTML = `${mDemo ? `<p class="demo-note">Vista de referencia: productos y diseños de ejemplo, sin precios ni stock reales.</p>` : ""}
     <div class="store"><div class="prob"><div class="stage" id="probStage"></div><div id="probInfo"></div></div>
-    <div class="pilewrap"><div class="pile-lbl">En la pila</div><div class="pile" id="pile"></div></div></div>`;
+    <div class="pilewrap"><div class="pile-lbl">En la pila <small>Desliza la prenda o toca un producto</small></div><div class="pile" id="pile"></div></div></div>`;
   renderPile(); renderProbador();
 }
 $("merch").addEventListener("click", e => {
   const l = e.target.closest("[data-lado]"); if(l){ mLado = +l.dataset.lado; renderProbador(); return; }
-  const f = e.target.closest(".fold"); if(f){ mSel = +f.dataset.i; mLado = 0; renderProbador(); if(innerWidth < 900) $("probStage").scrollIntoView({behavior:"smooth", block:"center"}); return; }
+  const f = e.target.closest(".fold"); if(f){ const n = +f.dataset.i; mDir = n > mSel ? 1 : -1; mSel = n; mLado = 0; renderProbador(); return; }
   const t = e.target.closest(".sizes button"); if(t){ t.parentNode.querySelectorAll("button").forEach(b => b.classList.toggle("on", b===t)); }
 });
 
@@ -745,7 +791,7 @@ const MERCH_BASE = [
   {producto:"CD IV Mundo", detalle:"Disco compacto · con Jonas Sanche", tipo:"cd", imagen:"img/merch/cd-iv-mundo.webp", precio:"$ 20.000", color:"#1E1E1E", tinta:"#F2F0EC"},
   {producto:"CD Literal", detalle:"Disco compacto · con Uzetaele", tipo:"cd", imagen:"img/merch/cd-literal.webp", precio:"$ 20.000", color:"#A9161A", tinta:"#F2F0EC"}
 ];
-let MERCH = [], mSel = 0, mDemo = false, mLado = 0;
+let MERCH = [], mSel = 0, mDemo = false, mLado = 0, mDir = 0;
 const localImg = u => /^img\/[\w\/.-]+$/.test(String(u||"").trim()) ? String(u).trim() : "";
 function merchArt(m){
   const pick = u => localImg(u) || safeUrl(u);
@@ -763,13 +809,19 @@ function renderProbador(){
   const tl = String(m.talles||"").split(",").map(t => t.trim()).filter(Boolean);
   const url = safeUrl(m.link_compra), out = agotado(m), precio = m.precio || "$ —";
   const tilt = [-3, 2, -1.5, 3, -2.5][mSel % 5];
-  $("probStage").innerHTML = `<div class="shot">${merchArt(m)}</div>`;
+  $("probStage").innerHTML = `<div class="shot" style="--dx:${mDir*40}px">${merchArt(m)}</div><span class="swipe-dots" aria-hidden="true">${MERCH.map((_,i)=>`<i class="${i===mSel?"on":""}"></i>`).join("")}</span>`;
   $("probInfo").innerHTML = `<span class="now">En el probador</span><h3>${esc(m.producto)}</h3><p class="meta">${esc([m.detalle, mDemo ? "Ejemplo" : ""].filter(Boolean).join(" · "))}</p>${!out && ultimas(m) ? `<p class="last">${ultimas(m)}</p>` : ""}
     ${(m.imagen2 || m.imagen_url_2) ? `<div class="sizes lados"><button type="button" data-lado="0" class="${mLado?"":"on"}">Frente</button><button type="button" data-lado="1" class="${mLado?"on":""}">Espalda</button></div>` : ""}
     ${tl.length ? `<div class="sizes">${tl.map((t,i) => `<button type="button" class="${i===Math.min(1,tl.length-1)?"on":""}">${esc(t)}</button>`).join("")}</div>` : ""}
     ${out ? `<span class="cta off">Agotado</span>` : url ? `<a class="cta" href="${esc(url)}" target="_blank" rel="noopener">Comprar · ${esc(precio)}</a>` : CONFIG.MERCH_PEDIDOS ? `<a class="cta" href="${esc(CONFIG.MERCH_PEDIDOS)}" target="_blank" rel="noopener">Pedir · ${esc(precio)}</a>` : `<span class="cta">Muy pronto</span>`}`;
   document.querySelectorAll("#pile .fold").forEach((f,i) => f.classList.toggle("on", i===mSel));
 }
+(() => { let x0 = null, y0 = 0;
+  document.addEventListener("touchstart", e => { if(!e.target.closest("#probStage")) return; x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, {passive:true});
+  document.addEventListener("touchend", e => { if(x0 === null) return; const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0; x0 = null;
+    if(Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy) || !MERCH.length) return;
+    mDir = dx < 0 ? 1 : -1; mSel = (mSel + mDir + MERCH.length) % MERCH.length; mLado = 0; renderProbador(); }, {passive:true});
+})();
 function renderPile(){
   const logo = (document.querySelector(".cover h1 svg")||{}).outerHTML || "";
   $("pile").innerHTML = MERCH.map((m,i) => { const light = /F2F0EC/i.test(m.color||""), dark = /0E0E0E/i.test(m.color||"#0E0E0E");
