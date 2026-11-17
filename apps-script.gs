@@ -27,7 +27,8 @@ const TABS = {
   Redes:   ["red", "url"],
   Booking: ["recibido", "motivo", "nombre", "organizacion", "email", "whatsapp", "ciudad", "pais", "tipo_evento",
             "formato", "fecha_tentativa", "venue_capacidad", "presupuesto", "mensaje", "origen", "estado_seguimiento", "notas"],
-  "Ciudades pedidas": ["recibido", "ciudad", "pais", "email", "origen"]
+  "Ciudades pedidas": ["recibido", "ciudad", "pais", "email", "origen"],
+  Suscriptores: ["recibido", "email", "ciudad", "intereses", "origen", "estado"]
 };
 
 const REDES_DEFAULT = ["instagram", "tiktok", "youtube", "spotify", "x", "facebook"];
@@ -74,6 +75,8 @@ function setup() {
     SpreadsheetApp.newDataValidation().requireValueInList(["remera", "buzo", "cd", "vinilo", "gorra", "tote", "otro"], true).build());
   ss.getSheetByName("Merch").getRange("K2:K").setDataValidation(
     SpreadsheetApp.newDataValidation().requireValueInList(["Disponible", "Pronto", "Agotado"], true).build());
+  ss.getSheetByName("Suscriptores").getRange("F2:F").setDataValidation(
+    SpreadsheetApp.newDataValidation().requireValueInList(["Activo", "Baja"], true).build());
   ss.getSheetByName("Booking").getRange("O2:O").setDataValidation(
     SpreadsheetApp.newDataValidation().requireValueInList(["Nuevo", "Contactado", "Negociando", "Confirmado", "Descartado"], true).build());
   const def = ss.getSheetByName("Sheet1") || ss.getSheetByName("Hoja 1");
@@ -108,6 +111,7 @@ function doPost(e) {
   const p = (e && e.parameter) || {};
   if (p.website) return json_(JSON.stringify({ ok: true })); // anti-spam (campo oculto)
   if (p.tipo === "demanda") return demandaPost_(p);
+  if (p.tipo === "suscripcion") return suscripcionPost_(p);
   if (!p.nombre || !p.email) return json_(JSON.stringify({ ok: false, error: "faltan datos" }));
   if (!p.motivo) p.motivo = "Solicitar fecha";
 
@@ -147,6 +151,23 @@ function demandaPost_(p) {
   try {
     SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Ciudades pedidas")
       .appendRow([new Date(), clean_(p.ciudad).slice(0, 80), clean_(p.pais).slice(0, 60), clean_(p.email).slice(0, 120), clean_(p.origen)]);
+  } finally {
+    lock.releaseLock();
+  }
+  return json_(JSON.stringify({ ok: true }));
+}
+
+/* "Entra a la lista": un email por fila en la pestaña Suscriptores (no duplica) */
+function suscripcionPost_(p) {
+  const email = clean_(p.email).toLowerCase().slice(0, 120);
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json_(JSON.stringify({ ok: false, error: "email" }));
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Suscriptores");
+    const last = sh.getLastRow();
+    const ya = last > 1 && sh.getRange(2, 2, last - 1, 1).getValues().some(r => String(r[0]).toLowerCase() === email);
+    if (!ya) sh.appendRow([new Date(), email, clean_(p.ciudad).slice(0, 80), clean_(p.intereses).slice(0, 80), clean_(p.origen), "Activo"]);
   } finally {
     lock.releaseLock();
   }
