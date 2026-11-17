@@ -229,10 +229,12 @@ a.thumb:hover img{transform:scale(1.03)}
 .pola .ph{position:relative;width:100%;aspect-ratio:1;overflow:hidden;background:radial-gradient(60% 22% at 50% 92%,rgba(0,0,0,.45),transparent 70%),linear-gradient(180deg,#6a6866 0%,#4a4846 58%,#3a3836 59%,#2c2a28 100%);box-shadow:inset 0 0 0 1px rgba(0,0,0,.25)}
 .pola .ph::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(120% 90% at 50% 40%,transparent 55%,rgba(0,0,0,.45)),url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E");mix-blend-mode:overlay;opacity:.9}
 .pola .ph>svg{position:absolute;inset:6% 8% 8%;width:84%;height:86%;filter:drop-shadow(0 10px 10px rgba(0,0,0,.45))}
-.pola .ph>img{width:100%;height:100%;object-fit:cover}
+.pola .ph>img{position:absolute;inset:5%;width:90%;height:90%;object-fit:contain;filter:drop-shadow(0 12px 14px rgba(0,0,0,.45))}
+.pola .ph>img.cd{inset:10% 4%;width:92%;height:80%}
 .pola .ph .mlogo{width:30%;filter:drop-shadow(0 1px 0 rgba(0,0,0,.3))}
-.pola .cp{position:absolute;left:16px;right:16px;bottom:16px;display:flex;justify-content:space-between;align-items:baseline;gap:10px;font:400 22px/1 "Permanent Marker",var(--display);color:#1a1a1a;transform:rotate(-1.5deg)}
-.pola .cp small{font:inherit;font-size:16px;color:var(--red-deep);white-space:nowrap}
+.pola .cp{position:absolute;left:16px;right:16px;bottom:16px;display:flex;justify-content:space-between;align-items:baseline;gap:10px;font:400 19px/1 "Permanent Marker",var(--display);color:#1a1a1a;transform:rotate(-1.5deg)}
+.pola .cp span{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pola .cp small{font:inherit;font-size:16px;color:var(--red-deep);white-space:nowrap;flex:none}
 .pola .tape{position:absolute;left:50%;top:-14px;width:96px;height:28px;transform:translateX(-50%) rotate(4deg);z-index:2;border:0;background:linear-gradient(180deg,rgba(236,224,196,.92),rgba(214,196,160,.88));box-shadow:0 1px 2px rgba(0,0,0,.25);clip-path:polygon(0 8%,4% 0,9% 10%,14% 0,100% 0,96% 12%,100% 22%,96% 34%,100% 46%,96% 58%,100% 70%,96% 82%,100% 92%,95% 100%,0 100%,4% 88%,0 76%,4% 64%,0 52%,4% 40%,0 28%,4% 16%)}
 #probInfo{min-width:0}
 .mlogo{position:absolute;left:50%;transform:translate(-50%,-50%);width:32%}
@@ -516,7 +518,8 @@ const CONFIG = {
   SHEET_API_URL: "",
   SPOTIFY_ARTIST_ID: "66X3l109SsMthurq0pHk3g",
   MERCH_LANZAMIENTO: "",
-  MERCH_DEMO: true, /* productos de referencia mientras no haya merch en la planilla. Poner en false antes de publicar en producción */
+  MERCH_DEMO: false, /* ya no se usan productos de ejemplo: la tienda muestra MERCH_BASE mientras la planilla no tenga merch */
+  MERCH_PEDIDOS: "https://www.instagram.com/urbanse/", /* PENDIENTE: canal de venta definitivo (tienda, WhatsApp, etc.) */
   REDES: { instagram:"https://www.instagram.com/urbanse/", tiktok:"https://www.tiktok.com/@elurbanse", spotify:"https://open.spotify.com/artist/66X3l109SsMthurq0pHk3g", youtube:"https://youtube.com/channel/UCWUkiZdLRdWJVyCVCgIRuqw", x:"https://x.com/urbanse", facebook:"https://www.facebook.com/UrbanseOficial/" }
 };
 const FALLBACK = { fechas:[
@@ -683,18 +686,19 @@ const cd = t => { const ms = t - Date.now(); if(ms <= 0) return ""; const d=Math
 function renderMerch(list){
   const items = list.filter(m => m.producto && !hidden(m.publicar));
   mDemo = !items.length && CONFIG.MERCH_DEMO;
-  if(!items.length && !mDemo){
+  if(!items.length && !mDemo && !MERCH_BASE.length){
     $("merch").innerHTML = `<div class="soon duo"><img src="img/galeria-2.jpg" alt="Urbanse apoyado en una pared de ladrillo" loading="lazy" style="object-position:50% 40%"><span>Nueva colección muy pronto</span></div>`;
     return;
   }
-  MERCH = items.length ? items : MERCH_DEMO; mSel = 0;
+  MERCH = items.length ? items : (mDemo ? MERCH_DEMO : MERCH_BASE); mSel = 0; mLado = 0;
   $("merch").innerHTML = `${mDemo ? `<p class="demo-note">Vista de referencia: productos y diseños de ejemplo, sin precios ni stock reales.</p>` : ""}
     <div class="store"><div class="prob"><div class="stage" id="probStage"></div><div id="probInfo"></div></div>
     <div class="pilewrap"><div class="pile-lbl">En la pila</div><div class="pile" id="pile"></div></div></div>`;
   renderPile(); renderProbador();
 }
 $("merch").addEventListener("click", e => {
-  const f = e.target.closest(".fold"); if(f){ mSel = +f.dataset.i; renderProbador(); if(innerWidth < 900) $("probStage").scrollIntoView({behavior:"smooth", block:"center"}); return; }
+  const l = e.target.closest("[data-lado]"); if(l){ mLado = +l.dataset.lado; renderProbador(); return; }
+  const f = e.target.closest(".fold"); if(f){ mSel = +f.dataset.i; mLado = 0; renderProbador(); if(innerWidth < 900) $("probStage").scrollIntoView({behavior:"smooth", block:"center"}); return; }
   const t = e.target.closest(".sizes button"); if(t){ t.parentNode.querySelectorAll("button").forEach(b => b.classList.toggle("on", b===t)); }
 });
 
@@ -728,10 +732,18 @@ const MERCH_DEMO = [
   {producto:"Gorra negra", detalle:"Logo bordado en rojo", forma:"gorra", color:"#0E0E0E", tinta:"#D71D22", talles:"", estado:"Agotado"},
   {producto:"Remera blanca", detalle:"Algodón · logo gótico en negro", forma:"remera", color:"#F2F0EC", tinta:"#0E0E0E", talles:"S,M,L,XL"}
 ];
-let MERCH = [], mSel = 0, mDemo = false;
+const MERCH_BASE = [
+  {producto:"Remera Oscuro y Sucio", detalle:"Remera negra · estampa Oscuro y Sucio", tipo:"remera", imagen:"img/merch/remera-oscuro-y-sucio.webp", precio:"$ 30.000", color:"#0E0E0E", tinta:"#F2F0EC"},
+  {producto:"Remera Delivery", detalle:"Remera blanca · estampa frente y espalda", tipo:"remera", imagen:"img/merch/remera-delivery-frente.webp", imagen2:"img/merch/remera-delivery-espalda.webp", precio:"$ 30.000", color:"#F2F0EC", tinta:"#D71D22"},
+  {producto:"CD Delivery", detalle:"Disco compacto", tipo:"cd", imagen:"img/merch/cd-delivery.webp", precio:"$ 20.000", color:"#D71D22", tinta:"#0E0E0E"},
+  {producto:"CD IV Mundo", detalle:"Disco compacto · con Jonas Sanche", tipo:"cd", imagen:"img/merch/cd-iv-mundo.webp", precio:"$ 20.000", color:"#1E1E1E", tinta:"#F2F0EC"},
+  {producto:"CD Literal", detalle:"Disco compacto · con Uzetaele", tipo:"cd", imagen:"img/merch/cd-literal.webp", precio:"$ 20.000", color:"#A9161A", tinta:"#F2F0EC"}
+];
+let MERCH = [], mSel = 0, mDemo = false, mLado = 0;
+const localImg = u => /^img\/[\w\/.-]+$/.test(String(u||"").trim()) ? String(u).trim() : "";
 function merchArt(m){
-  const img = safeUrl(m.imagen_url);
-  if(img) return `<img src="${esc(img)}" alt="${esc(m.producto)}">`;
+  const src = mLado && (m.imagen2 || m.imagen_url_2) ? (localImg(m.imagen2) || safeUrl(m.imagen_url_2)) : (localImg(m.imagen) || safeUrl(m.imagen_url));
+  if(src) return `<img class="${m.tipo==="cd"?"cd":""}" src="${esc(src)}" alt="${esc(m.producto)}${mLado?" (espalda)":""}">`;
   const f = SHAPES[m.forma] ? m.forma : "remera", logo = (document.querySelector(".cover h1 svg")||{}).outerHTML || "";
   const light = /F2F0EC/i.test(m.color||"");
   return `<svg viewBox="0 0 200 200" style="color:${esc(m.color)};fill:${esc(m.color)};${light?"stroke:#0E0E0E;stroke-width:2":""}" aria-hidden="true">${SHAPES[f]}</svg><span class="mlogo" style="top:${LOGO_TOP[f]};color:${esc(m.tinta)}">${logo}</span>`;
@@ -744,8 +756,9 @@ function renderProbador(){
   const tilt = [-3, 2, -1.5, 3, -2.5][mSel % 5];
   $("probStage").innerHTML = `<div class="pola" style="--r:${tilt}deg"><span class="tape" aria-hidden="true"></span><div class="ph">${merchArt(m)}</div><div class="cp"><span>${esc(m.producto)}</span><small>${out ? "Agotado" : esc(precio)}</small></div></div>`;
   $("probInfo").innerHTML = `<span class="now">En el probador</span><h3>${esc(m.producto)}</h3><p class="meta">${esc([m.detalle, mDemo ? "Ejemplo" : ""].filter(Boolean).join(" · "))}</p>
-    <div class="sizes">${tl.length ? tl.map((t,i) => `<button type="button" class="${i===Math.min(1,tl.length-1)?"on":""}">${esc(t)}</button>`).join("") : `<span class="on">Talle único</span>`}</div>
-    ${out ? `<span class="cta off">Agotado</span>` : url ? `<a class="cta" href="${esc(url)}" target="_blank" rel="noopener">Comprar · ${esc(precio)}</a>` : `<span class="cta">${mDemo ? "Comprar · $ —" : "Muy pronto"}</span>`}`;
+    ${(m.imagen2 || m.imagen_url_2) ? `<div class="sizes lados"><button type="button" data-lado="0" class="${mLado?"":"on"}">Frente</button><button type="button" data-lado="1" class="${mLado?"on":""}">Espalda</button></div>` : ""}
+    ${tl.length ? `<div class="sizes">${tl.map((t,i) => `<button type="button" class="${i===Math.min(1,tl.length-1)?"on":""}">${esc(t)}</button>`).join("")}</div>` : ""}
+    ${out ? `<span class="cta off">Agotado</span>` : url ? `<a class="cta" href="${esc(url)}" target="_blank" rel="noopener">Comprar · ${esc(precio)}</a>` : CONFIG.MERCH_PEDIDOS ? `<a class="cta" href="${esc(CONFIG.MERCH_PEDIDOS)}" target="_blank" rel="noopener">Pedir · ${esc(precio)}</a>` : `<span class="cta">Muy pronto</span>`}`;
   document.querySelectorAll("#pile .fold").forEach((f,i) => f.classList.toggle("on", i===mSel));
 }
 function renderPile(){
