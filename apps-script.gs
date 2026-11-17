@@ -4,7 +4,7 @@
  * Este script hace dos cosas:
  *  1) GET  → entrega a la landing las pestañas Fechas, Videos, Merch y Redes (JSON).
  *  2) POST → guarda cada solicitud de booking en la pestaña "Booking" (con aviso por email)
- *            y cada pedido "Pídelo en tu ciudad" de los fans en la pestaña "Demanda".
+ *            y cada pedido "Pídelo en tu ciudad" de los fans en la pestaña "Ciudades pedidas".
  *
  * INSTALACIÓN (una sola vez):
  *  1. En el Sheet: Extensiones → Apps Script. Borra lo que haya y pega este archivo.
@@ -27,7 +27,7 @@ const TABS = {
   Redes:   ["red", "url"],
   Booking: ["recibido", "motivo", "nombre", "organizacion", "email", "whatsapp", "ciudad", "pais", "tipo_evento",
             "formato", "fecha_tentativa", "venue_capacidad", "presupuesto", "mensaje", "origen", "estado_seguimiento", "notas"],
-  Demanda: ["recibido", "ciudad", "pais", "email", "origen"]
+  "Ciudades pedidas": ["recibido", "ciudad", "pais", "email", "origen"]
 };
 
 const REDES_DEFAULT = ["instagram", "tiktok", "youtube", "spotify", "x", "facebook"];
@@ -137,13 +137,13 @@ function doPost(e) {
   return json_(JSON.stringify({ ok: true }));
 }
 
-/* "Pídelo en tu ciudad": una fila por pedido en la pestaña Demanda */
+/* "Pídelo en tu ciudad": una fila por pedido en la pestaña "Ciudades pedidas" */
 function demandaPost_(p) {
   if (!p.ciudad || !p.pais) return json_(JSON.stringify({ ok: false, error: "faltan datos" }));
   const lock = LockService.getScriptLock();
   lock.waitLock(10000);
   try {
-    SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Demanda")
+    SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Ciudades pedidas")
       .appendRow([new Date(), clean_(p.ciudad).slice(0, 80), clean_(p.pais).slice(0, 60), clean_(p.email).slice(0, 120), clean_(p.origen)]);
   } finally {
     lock.releaseLock();
@@ -155,7 +155,7 @@ function demandaPost_(p) {
 function demanda_(ss) {
   const norm = s => String(s || "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   const count = {};
-  rows_(ss, "Demanda").forEach(r => {
+  rows_(ss, "Ciudades pedidas").forEach(r => {
     if (!r.ciudad) return;
     const k = norm(r.ciudad) + "|" + norm(r.pais);
     if (!count[k]) count[k] = { ciudad: String(r.ciudad).trim(), pais: String(r.pais || "").trim(), n: 0 };
