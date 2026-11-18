@@ -24,7 +24,7 @@ const CACHE_SECONDS = 300;                       // la landing se actualiza como
    BIT_APP_ID: se obtiene en Bandsintown for Artists › Settings › General › API (o pidiéndolo a Bandsintown).
    Si una fecha está en los dos lados (mismo día y ciudad), manda la fila del Sheet. */
 const BIT_ARTIST = "Urbanse";   // nombre exacto del artista en Bandsintown
-const BIT_APP_ID = "";          // PENDIENTE: pegar aquí el app_id
+const BIT_APP_ID = "";          // app_id de Bandsintown (va en la copia pegada en Apps Script, no en el repositorio)
 
 const TABS = {
   Fechas:  ["fecha", "hora", "ciudad", "pais", "venue", "evento", "link_entradas", "estado", "publicar"],
@@ -225,7 +225,7 @@ function bandsintown_() {
         venue: v.name || "",
         evento: e.title || "",
         link_entradas: offer.url || e.url || "",
-        estado: status === "sold out" ? "Agotado" : offer.url ? "A la venta" : "Próximamente",
+        estado: (e.sold_out || status === "sold out") ? "Agotado" : offer.url ? "A la venta" : "Próximamente",
         publicar: "si"
       };
     }).filter(e => e.fecha);
