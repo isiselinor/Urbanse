@@ -220,10 +220,10 @@ function bandsintown_() {
         fuente: "bandsintown",
         fecha: dt.slice(0, 10),
         hora: dt.slice(11, 16),
-        ciudad: v.city || "",
+        ciudad: String(v.city || "").trim(),
         pais: PAISES_[v.country] || v.country || "",
-        venue: v.name || "",
-        evento: e.title || "",
+        venue: String(v.name || "").trim() === String(e.title || "").trim() ? "" : String(v.name || "").trim(),
+        evento: String(e.title || "").trim(),
         link_entradas: offer.url || e.url || "",
         estado: (e.sold_out || status === "sold out") ? "Agotado" : offer.url ? "A la venta" : "Próximamente",
         publicar: "si"
