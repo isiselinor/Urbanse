@@ -34,8 +34,11 @@ const TABS = {
   Booking: ["recibido", "motivo", "nombre", "organizacion", "email", "whatsapp", "ciudad", "pais", "tipo_evento",
             "formato", "fecha_tentativa", "venue_capacidad", "presupuesto", "mensaje", "origen", "estado_seguimiento", "notas"],
   "Ciudades pedidas": ["recibido", "ciudad", "pais", "email", "origen"],
-  Suscriptores: ["recibido", "email", "ciudad", "intereses", "origen", "estado"]
+  Suscriptores: ["recibido", "email", "ciudad", "intereses", "origen", "estado"],
+  "Pedidos merch": ["recibido", "pedido", "producto", "talle", "cantidad", "precio", "total", "nombre", "telefono", "email",
+                    "entrega", "direccion", "ciudad", "provincia", "cp", "pais", "pago", "notas", "origen", "estado", "seguimiento"]
 };
+const ESTADOS_PEDIDO = ["Nuevo", "Confirmado", "Pagado", "Enviado", "Entregado", "Cancelado"];
 
 const REDES_DEFAULT = ["instagram", "tiktok", "youtube", "spotify", "x", "facebook"];
 
@@ -83,6 +86,8 @@ function setup() {
     SpreadsheetApp.newDataValidation().requireValueInList(["Disponible", "Pronto", "Agotado"], true).build());
   ss.getSheetByName("Suscriptores").getRange("F2:F").setDataValidation(
     SpreadsheetApp.newDataValidation().requireValueInList(["Activo", "Baja"], true).build());
+  ss.getSheetByName("Pedidos merch").getRange("T2:T").setDataValidation(
+    SpreadsheetApp.newDataValidation().requireValueInList(ESTADOS_PEDIDO, true).build());
   ss.getSheetByName("Booking").getRange("O2:O").setDataValidation(
     SpreadsheetApp.newDataValidation().requireValueInList(["Nuevo", "Contactado", "Negociando", "Confirmado", "Descartado"], true).build());
   const def = ss.getSheetByName("Sheet1") || ss.getSheetByName("Hoja 1");
@@ -118,6 +123,7 @@ function doPost(e) {
   if (p.website) return json_(JSON.stringify({ ok: true })); // anti-spam (campo oculto)
   if (p.tipo === "demanda") return demandaPost_(p);
   if (p.tipo === "suscripcion") return suscripcionPost_(p);
+  if (p.tipo === "pedido") return pedidoPost_(p);
   if (!p.nombre || !p.email) return json_(JSON.stringify({ ok: false, error: "faltan datos" }));
   if (!p.motivo) p.motivo = "Solicitar fecha";
 
@@ -176,6 +182,50 @@ function suscripcionPost_(p) {
     if (!ya) sh.appendRow([new Date(), email, clean_(p.ciudad).slice(0, 80), clean_(p.intereses).slice(0, 80), clean_(p.origen), "Activo"]);
   } finally {
     lock.releaseLock();
+  }
+  return json_(JSON.stringify({ ok: true }));
+}
+
+/* Pedido de merch: una fila por pedido en "Pedidos merch" (control de ventas) + aviso por email.
+   El fan termina el pedido por WhatsApp; el número de pedido une los dos mensajes. */
+function pedidoPost_(p) {
+  if (!p.pedido || !p.producto || !p.nombre || !p.telefono) return json_(JSON.stringify({ ok: false, error: "faltan datos" }));
+  const cols = TABS["Pedidos merch"];
+  const precioN = Number(String(p.precio || "").replace(/[^\d]/g, "")) || 0;
+  const cant = Math.max(1, Math.min(20, parseInt(p.cantidad, 10) || 1));
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    let sh = ss.getSheetByName("Pedidos merch");
+    if (!sh) {
+      sh = ss.insertSheet("Pedidos merch");
+      sh.getRange(1, 1, 1, cols.length).setValues([cols]).setFontWeight("bold").setBackground("#D71D22").setFontColor("#000000");
+      sh.setFrozenRows(1);
+      sh.getRange("T2:T").setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(ESTADOS_PEDIDO, true).build());
+    }
+    const ya = sh.getLastRow() > 1 && sh.getRange(2, 2, sh.getLastRow() - 1, 1).getValues().some(r => String(r[0]) === String(p.pedido));
+    if (ya) return json_(JSON.stringify({ ok: true }));
+    sh.appendRow(cols.map(h => {
+      if (h === "recibido") return new Date();
+      if (h === "cantidad") return cant;
+      if (h === "total") return precioN ? precioN * cant : "";
+      if (h === "estado") return "Nuevo";
+      if (h === "seguimiento") return "";
+      return clean_(p[h]).slice(0, 300);
+    }));
+  } finally {
+    lock.releaseLock();
+  }
+  if (NOTIFY_EMAIL) {
+    MailApp.sendEmail({
+      to: NOTIFY_EMAIL,
+      replyTo: clean_(p.email),
+      subject: "Pedido de merch " + clean_(p.pedido) + " — " + clean_(p.producto),
+      body: "Nuevo pedido de merch desde la web de Urbanse. El fan lo termina por WhatsApp con el mismo número de pedido.\n\n" +
+            cols.filter(h => p[h]).map(h => h.toUpperCase() + ": " + clean_(p[h])).join("\n") +
+            "\n\nControl de pedidos: " + SpreadsheetApp.getActiveSpreadsheet().getUrl()
+    });
   }
   return json_(JSON.stringify({ ok: true }));
 }
