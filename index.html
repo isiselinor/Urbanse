@@ -320,6 +320,7 @@ dialog.ped::backdrop{background:rgba(0,0,0,.72)}
 .ped-items img{width:52px;height:52px;object-fit:contain;background:var(--ink3)}
 .ped-items b{display:block;font:700 15px var(--display)}.ped-items small{color:var(--gray);font-size:13px}
 .ped-items select{width:auto;padding:8px}
+.ped-items .tsel{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:13px;color:var(--gray)}.ped-items .tsel select{padding:6px 8px;font-size:14px}
 .ped-items .rm{background:none;border:0;color:var(--gray);font:700 20px/1 var(--display);cursor:pointer;padding:4px}
 .ped-items .empty{display:block;color:var(--gray);padding:14px 0}
 .ped-total{display:flex;justify-content:space-between;padding:12px 0;font:700 16px var(--display)}.ped-total b{font-size:20px}
@@ -719,6 +720,7 @@ const CONFIG = {
   MERCH_DEMO: false, /* ya no se usan productos de ejemplo: la tienda muestra MERCH_BASE mientras la planilla no tenga merch */
   MERCH_WHATSAPP: "5491156516862",   /* número de ventas de merch (solo dígitos, con código de país) */
   MERCH_ENTREGAS: ["Envío a domicilio", "Envío a sucursal", "Retiro a coordinar"],
+  TALLES_ROPA: ["S", "M", "L", "XL", "XXL"],   /* talles por defecto si la planilla no los trae */
   MERCH_PAGOS: ["Transferencia", "Mercado Pago", "Efectivo (solo retiro)"],
   REDES: { instagram:"https://www.instagram.com/urbanse/", tiktok:"https://www.tiktok.com/@elurbanse", spotify:"https://open.spotify.com/artist/66X3l109SsMthurq0pHk3g", youtube:"https://youtube.com/channel/UCWUkiZdLRdWJVyCVCgIRuqw", x:"https://x.com/urbanse", facebook:"https://www.facebook.com/UrbanseOficial/" }
 };
@@ -930,12 +932,13 @@ $("listaForm").addEventListener("submit", async e => {
     const m = MERCH[mSel]; if(!m || agotado(m)) return;
     const talle = (document.querySelector(".talles button.on") || {}).dataset?.talle || "";
     const k = m.producto + "|" + talle, ya = CART.find(i => i.k === k);
-    if(ya) ya.cant = Math.min(5, ya.cant + 1); else CART.push({k, producto:m.producto, talle, cant:1, precio:m.precio || "", img:imgOf(m)});
+    if(ya) ya.cant = Math.min(5, ya.cant + 1); else CART.push({k, producto:m.producto, talle, talles:tallesDe(m), cant:1, precio:m.precio || "", img:imgOf(m)});
     save(); badge(); toast(`Agregado: ${m.producto}${talle ? " · " + talle : ""}`);
   }
   function renderItems(){
+    CART.forEach(i => { if(!Array.isArray(i.talles)){ const m = MERCH.find(x => x.producto === i.producto) || {producto:i.producto}; i.talles = tallesDe(m); } });
     $("pedItems").innerHTML = CART.length ? CART.map((i, n) => `<li><span>${i.img ? `<img src="${esc(i.img)}" alt="">` : ""}</span>
-      <div><b>${esc(i.producto)}</b><small>${esc([i.talle ? "Talle " + i.talle : "", i.precio].filter(Boolean).join(" · "))}</small></div>
+      <div><b>${esc(i.producto)}</b><small>${esc(i.precio || "")}</small>${(i.talles||[]).length ? `<label class="tsel">Talle <select data-t="${n}" aria-label="Talle de ${esc(i.producto)}"><option value="">Elegir</option>${i.talles.map(t => `<option ${t===i.talle?"selected":""}>${esc(t)}</option>`).join("")}</select></label>` : ""}</div>
       <select data-q="${n}" aria-label="Cantidad de ${esc(i.producto)}">${[1,2,3,4,5].map(q => `<option ${q===i.cant?"selected":""}>${q}</option>`).join("")}</select>
       <button type="button" class="rm" data-rm="${n}" aria-label="Quitar ${esc(i.producto)}">×</button></li>`).join("") : `<li><span class="empty">Tu pedido está vacío.</span></li>`;
     $("pedTotal").textContent = total() ? fmt(total()) : "—";
@@ -953,6 +956,7 @@ $("listaForm").addEventListener("submit", async e => {
   f.addEventListener("change", e => {
     if(e.target.name === "entrega") syncAddr();
     if(e.target.dataset.q){ CART[+e.target.dataset.q].cant = +e.target.value; save(); badge(); renderItems(); }
+    if(e.target.dataset.t !== undefined){ const it = CART[+e.target.dataset.t]; it.talle = e.target.value; it.k = it.producto + "|" + it.talle; save(); }
   });
   document.addEventListener("click", e => {
     const t = e.target.closest(".talles [data-talle]"); if(t){ t.parentNode.querySelectorAll("button").forEach(b => b.classList.toggle("on", b===t)); return; }
@@ -966,6 +970,8 @@ $("listaForm").addEventListener("submit", async e => {
   f.addEventListener("submit", e => {
     e.preventDefault(); if(f.website.value) return;
     if(!CART.length){ msg.textContent = "Agrega al menos un producto."; return; }
+    const sinTalle = CART.findIndex(i => (i.talles||[]).length && !i.talle);
+    if(sinTalle >= 0){ msg.textContent = `Elige el talle de ${CART[sinTalle].producto}.`; const sel = f.querySelector(`[data-t="${sinTalle}"]`); if(sel) sel.focus(); return; }
     const bad = [...f.querySelectorAll("[required]")].find(i => !i.closest("[hidden]") && !i.value.trim());
     if(bad){ msg.textContent = "Completa los campos marcados."; bad.focus(); return; }
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email.value.trim())){ msg.textContent = "Revisa tu email."; f.email.focus(); return; }
@@ -1065,12 +1071,14 @@ function merchArt(m){
   const light = /F2F0EC/i.test(m.color||"");
   return `<svg viewBox="0 0 200 200" style="color:${esc(m.color)};fill:${esc(m.color)};${light?"stroke:#0E0E0E;stroke-width:2":""}" aria-hidden="true">${SHAPES[f]}</svg><span class="mlogo" style="top:${LOGO_TOP[f]};color:${esc(m.tinta)}">${logo}</span>`;
 }
+const esRopa = m => /remera|buzo|campera|musculosa|hoodie|ropa/i.test(String(m.tipo || "") + " " + String(m.producto || ""));
+const tallesDe = m => { const t = String(m.talles||"").split(",").map(x => x.trim()).filter(Boolean); return t.length ? t : esRopa(m) ? CONFIG.TALLES_ROPA : []; };
 const stockN = m => { const v = String(m.stock ?? "").trim(); return v === "" || isNaN(+v) ? null : +v; };
 const agotado = m => /agotad|sold/i.test(m.estado||"") || stockN(m) === 0;
 const ultimas = m => { const n = stockN(m); return n !== null && n > 0 && n <= 5 ? (n === 1 ? "Última unidad" : `Últimas ${n}`) : ""; };
 function renderProbador(){
   const m = MERCH[mSel]; if(!m) return;
-  const tl = String(m.talles||"").split(",").map(t => t.trim()).filter(Boolean);
+  const tl = tallesDe(m);
   const url = safeUrl(m.link_compra), out = agotado(m), precio = m.precio || "$ —";
   const tilt = [-3, 2, -1.5, 3, -2.5][mSel % 5];
   $("probStage").innerHTML = `<div class="shot" style="--dx:${mDir*40}px">${merchArt(m)}</div><span class="swipe-dots" aria-hidden="true">${MERCH.map((_,i)=>`<i class="${i===mSel?"on":""}"></i>`).join("")}</span>`;
