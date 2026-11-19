@@ -308,13 +308,29 @@ dialog.ped::backdrop{background:rgba(0,0,0,.72)}
 .ped .opts span{display:inline-block;padding:10px 14px;border:1px solid var(--line);font:700 14px var(--display)}
 .ped .opts input:checked+span{background:var(--red);color:var(--ink);border-color:var(--red)}
 .ped .opts input:focus-visible+span{outline:2px solid var(--paper)}
-.ped .addr[hidden]{display:none}
+.ped [hidden]{display:none!important}
 .ped .fine{font-size:13px;color:var(--gray);margin:4px 0 14px}
 .ped .send{width:100%;padding:16px;background:var(--red);color:var(--ink);border:0;font:800 16px var(--display);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px}
 .ped .send svg{width:20px;height:20px}
 .ped-ok p{margin:0 0 14px;line-height:1.5}.ped-ok .ok-id b{color:var(--red);font:800 20px var(--display)}.ped-ok .send{text-decoration:none;margin-bottom:10px}.ped-ok .back{width:100%;padding:14px;background:none;color:var(--paper);border:1px solid var(--line);font:700 15px var(--display);cursor:pointer}
 .ped .pmsg{min-height:1.2em;margin:10px 0 0;font-size:14px}.ped .pmsg a{color:var(--red);text-decoration:underline}
 @media (max-width:520px){.ped .g2{grid-template-columns:1fr}dialog.ped{width:100vw;height:100svh;max-height:100svh;margin:0}}
+.ped-items{list-style:none;margin:14px 0 0;padding:0;border-top:1px solid var(--line)}
+.ped-items li{display:grid;grid-template-columns:52px 1fr auto auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.ped-items img{width:52px;height:52px;object-fit:contain;background:var(--ink3)}
+.ped-items b{display:block;font:700 15px var(--display)}.ped-items small{color:var(--gray);font-size:13px}
+.ped-items select{width:auto;padding:8px}
+.ped-items .rm{background:none;border:0;color:var(--gray);font:700 20px/1 var(--display);cursor:pointer;padding:4px}
+.ped-items .empty{display:block;color:var(--gray);padding:14px 0}
+.ped-total{display:flex;justify-content:space-between;padding:12px 0;font:700 16px var(--display)}.ped-total b{font-size:20px}
+.ped .more{background:none;border:1px dashed var(--line);color:var(--paper);width:100%;padding:12px;font:700 14px var(--display);cursor:pointer;margin-bottom:18px}
+.cartbtn{position:fixed;right:16px;bottom:16px;z-index:60;display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--red);color:var(--ink);border:0;font:800 15px var(--display);cursor:pointer;box-shadow:0 6px 24px rgba(0,0,0,.45)}
+.cartbtn[hidden]{display:none}
+.cartbtn b{display:grid;place-items:center;min-width:24px;height:24px;border-radius:12px;background:var(--ink);color:var(--paper);font-size:13px}
+.cartbtn i{font-style:normal;font-weight:600}
+.carttoast{position:fixed;left:50%;bottom:76px;transform:translate(-50%,20px);z-index:61;margin:0;padding:10px 16px;background:var(--paper);color:var(--ink);font:700 14px var(--display);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s}
+.carttoast.on{opacity:1;transform:translate(-50%,0)}
+@media (max-width:899px){.cartbtn{bottom:calc(64px + env(safe-area-inset-bottom));right:12px}.carttoast{bottom:calc(124px + env(safe-area-inset-bottom));width:max-content;max-width:90vw}}
 .store .cta.off{background:var(--line);color:var(--gray)}
 .pile-lbl{font:700 15px var(--display);margin-bottom:10px}
 .pile{display:flex;flex-direction:column;gap:6px}
@@ -637,12 +653,14 @@ footer .kicker{display:block;margin-bottom:6px}
   </div>
 </section>
 
+<button type="button" class="cartbtn" id="cartBtn" hidden data-cart><span>Ver pedido</span><b id="cartN">0</b><i id="cartT"></i></button>
+<p class="carttoast" id="cartToast" role="status" aria-live="polite"></p>
 <dialog id="pedido" class="ped" aria-labelledby="t-ped">
   <form id="pedForm" class="ped-in" novalidate>
-    <div class="ped-top"><div><span class="kicker">Tienda</span><h3 id="t-ped">Pedir merch</h3></div><button type="button" class="x" data-close aria-label="Cerrar">×</button></div>
-    <div class="ped-sum" id="pedSum"></div>
-    <fieldset id="pedTalleBox"><legend>Talle</legend><div class="opts" id="pedTalles"></div></fieldset>
-    <label class="f"><span>Cantidad</span><select name="cantidad"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>
+    <div class="ped-top"><div><span class="kicker">Tienda</span><h3 id="t-ped">Tu pedido</h3></div><button type="button" class="x" data-close aria-label="Cerrar">×</button></div>
+    <ul class="ped-items" id="pedItems"></ul>
+    <div class="ped-total"><span>Total</span><b id="pedTotal"></b></div>
+    <button type="button" class="more" data-close>+ Agregar otro producto</button>
     <fieldset><legend>Tus datos</legend>
       <label class="f"><span>Nombre y apellido</span><input name="nombre" autocomplete="name" required></label>
       <div class="g2"><label class="f"><span>WhatsApp</span><input name="telefono" type="tel" autocomplete="tel" placeholder="+54 9 11 …" required></label>
@@ -650,12 +668,14 @@ footer .kicker{display:block;margin-bottom:6px}
     </fieldset>
     <fieldset><legend>Entrega</legend><div class="opts" id="pedEntregas"></div></fieldset>
     <div class="addr" id="pedAddr">
-      <label class="f"><span>Dirección (calle, número, piso)</span><input name="direccion" autocomplete="street-address"></label>
+      <label class="f" id="pedEmpresa"><span>Empresa de envío</span><input name="empresa_envio" placeholder="Correo Argentino, Andreani, OCA…"></label>
+      <label class="f"><span id="pedDirLbl">Dirección (calle, número, piso)</span><input name="direccion" autocomplete="street-address"></label>
       <div class="g2"><label class="f"><span>Ciudad</span><input name="ciudad" autocomplete="address-level2"></label>
       <label class="f"><span>Provincia</span><input name="provincia" autocomplete="address-level1"></label></div>
       <div class="g2"><label class="f"><span>Código postal</span><input name="cp" autocomplete="postal-code"></label>
       <label class="f"><span>País</span><input name="pais" autocomplete="country-name" value="Argentina"></label></div>
     </div>
+    <p class="fine" id="pedRetiro" hidden>El lugar y el horario de retiro los coordinamos por WhatsApp.</p>
     <fieldset><legend>Forma de pago</legend><div class="opts" id="pedPagos"></div></fieldset>
     <label class="f"><span>Comentarios (opcional)</span><textarea name="notas" rows="2"></textarea></label>
     <input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
@@ -698,7 +718,7 @@ const CONFIG = {
   MERCH_LANZAMIENTO: "",
   MERCH_DEMO: false, /* ya no se usan productos de ejemplo: la tienda muestra MERCH_BASE mientras la planilla no tenga merch */
   MERCH_WHATSAPP: "5491156516862",   /* número de ventas de merch (solo dígitos, con código de país) */
-  MERCH_ENTREGAS: ["Envío a domicilio", "Retiro a coordinar"],
+  MERCH_ENTREGAS: ["Envío a domicilio", "Envío a sucursal", "Retiro a coordinar"],
   MERCH_PAGOS: ["Transferencia", "Mercado Pago", "Efectivo (solo retiro)"],
   REDES: { instagram:"https://www.instagram.com/urbanse/", tiktok:"https://www.tiktok.com/@elurbanse", spotify:"https://open.spotify.com/artist/66X3l109SsMthurq0pHk3g", youtube:"https://youtube.com/channel/UCWUkiZdLRdWJVyCVCgIRuqw", x:"https://x.com/urbanse", facebook:"https://www.facebook.com/UrbanseOficial/" }
 };
@@ -893,57 +913,87 @@ $("listaForm").addEventListener("submit", async e => {
   btn.disabled = false;
 });
 
-/* ---------- Pedido de merch: formulario → planilla (control) + WhatsApp ---------- */
+/* ---------- Pedido de merch: carrito → formulario → planilla (control) + WhatsApp ---------- */
 (() => {
   const dlg = $("pedido"), f = $("pedForm"), msg = $("pedMsg");
+  const KEY = "urbanse-pedido"; let CART = [];
+  try{ CART = JSON.parse(localStorage.getItem(KEY) || "[]"); if(!Array.isArray(CART)) CART = []; }catch(_){ CART = []; }
+  const save = () => { try{ localStorage.setItem(KEY, JSON.stringify(CART)); }catch(_){} };
+  const num = p => Number(String(p || "").replace(/[^\d]/g, "")) || 0;
+  const fmt = n => "$ " + n.toLocaleString("es-AR");
+  const total = () => CART.reduce((t, i) => t + num(i.precio) * i.cant, 0);
+  const units = () => CART.reduce((t, i) => t + i.cant, 0);
+  const imgOf = m => localImg(m.imagen) || safeUrl(m.imagen) || localImg(m.imagen_url) || safeUrl(m.imagen_url);
+  function badge(){ const n = units(); $("cartBtn").hidden = !n; $("cartN").textContent = n; $("cartT").textContent = total() ? fmt(total()) : ""; }
+  let tt; function toast(t){ const el = $("cartToast"); el.textContent = t; el.classList.add("on"); clearTimeout(tt); tt = setTimeout(() => el.classList.remove("on"), 1800); }
+  function add(){
+    const m = MERCH[mSel]; if(!m || agotado(m)) return;
+    const talle = (document.querySelector(".talles button.on") || {}).dataset?.talle || "";
+    const k = m.producto + "|" + talle, ya = CART.find(i => i.k === k);
+    if(ya) ya.cant = Math.min(5, ya.cant + 1); else CART.push({k, producto:m.producto, talle, cant:1, precio:m.precio || "", img:imgOf(m)});
+    save(); badge(); toast(`Agregado: ${m.producto}${talle ? " · " + talle : ""}`);
+  }
+  function renderItems(){
+    $("pedItems").innerHTML = CART.length ? CART.map((i, n) => `<li><span>${i.img ? `<img src="${esc(i.img)}" alt="">` : ""}</span>
+      <div><b>${esc(i.producto)}</b><small>${esc([i.talle ? "Talle " + i.talle : "", i.precio].filter(Boolean).join(" · "))}</small></div>
+      <select data-q="${n}" aria-label="Cantidad de ${esc(i.producto)}">${[1,2,3,4,5].map(q => `<option ${q===i.cant?"selected":""}>${q}</option>`).join("")}</select>
+      <button type="button" class="rm" data-rm="${n}" aria-label="Quitar ${esc(i.producto)}">×</button></li>`).join("") : `<li><span class="empty">Tu pedido está vacío.</span></li>`;
+    $("pedTotal").textContent = total() ? fmt(total()) : "—";
+  }
   const opts = (id, name, list) => { $(id).innerHTML = list.map((v,i) => `<label><input type="radio" name="${name}" value="${esc(v)}" ${i===0?"checked":""}><span>${esc(v)}</span></label>`).join(""); };
   opts("pedEntregas", "entrega", CONFIG.MERCH_ENTREGAS); opts("pedPagos", "pago", CONFIG.MERCH_PAGOS);
-  const syncAddr = () => { const envio = /env[ií]o/i.test((f.entrega && f.entrega.value) || ""); $("pedAddr").hidden = !envio; ["direccion","ciudad","provincia","cp"].forEach(n => f[n].required = envio);
-    f.querySelectorAll("[name=pago]").forEach(r => { const soloRetiro = /solo retiro/i.test(r.value); r.parentNode.hidden = envio && soloRetiro; if(r.parentNode.hidden && r.checked) f.querySelector("[name=pago]").checked = true; }); };
-  f.addEventListener("change", e => { if(e.target.name === "entrega") syncAddr(); });
+  const modo = () => { const v = (f.entrega && f.entrega.value) || ""; return /sucursal/i.test(v) ? "sucursal" : /domicilio/i.test(v) ? "domicilio" : "retiro"; };
+  function syncAddr(){
+    const m = modo(), envio = m !== "retiro";
+    $("pedAddr").hidden = !envio; $("pedRetiro").hidden = envio; $("pedEmpresa").hidden = m !== "sucursal";
+    $("pedDirLbl").textContent = m === "sucursal" ? "Sucursal (nombre o dirección)" : "Dirección (calle, número, piso)";
+    ["direccion","ciudad","provincia","cp"].forEach(n => f[n].required = envio); f.empresa_envio.required = m === "sucursal";
+    f.querySelectorAll("[name=pago]").forEach(r => { r.parentNode.hidden = envio && /solo retiro/i.test(r.value); if(r.parentNode.hidden && r.checked) f.querySelector("[name=pago]").checked = true; });
+  }
+  f.addEventListener("change", e => {
+    if(e.target.name === "entrega") syncAddr();
+    if(e.target.dataset.q){ CART[+e.target.dataset.q].cant = +e.target.value; save(); badge(); renderItems(); }
+  });
   document.addEventListener("click", e => {
     const t = e.target.closest(".talles [data-talle]"); if(t){ t.parentNode.querySelectorAll("button").forEach(b => b.classList.toggle("on", b===t)); return; }
-    if(e.target.closest("[data-pedir]")) open();
+    if(e.target.closest("[data-add]")){ add(); return; }
+    if(e.target.closest("[data-cart]")){ open(); return; }
+    const rm = e.target.closest("[data-rm]"); if(rm){ CART.splice(+rm.dataset.rm, 1); save(); badge(); renderItems(); return; }
     if(e.target.closest("[data-close]")) dlg.close();
   });
   dlg.addEventListener("click", e => { if(e.target === dlg) dlg.close(); });
-  let item = null;
-  function open(){
-    const m = MERCH[mSel]; if(!m) return; item = m;
-    const tl = String(m.talles||"").split(",").map(t => t.trim()).filter(Boolean);
-    const elegido = (document.querySelector(".talles button.on")||{}).dataset?.talle || tl[0] || "";
-    const img = localImg(m.imagen) || safeUrl(m.imagen) || localImg(m.imagen_url) || safeUrl(m.imagen_url);
-    $("pedSum").innerHTML = `${img ? `<img src="${esc(img)}" alt="">` : ""}<div><b>${esc(m.producto)}</b><span>${esc([m.detalle, m.precio].filter(Boolean).join(" · "))}</span></div>`;
-    $("pedTalleBox").hidden = !tl.length;
-    $("pedTalles").innerHTML = tl.map(t => `<label><input type="radio" name="talle" value="${esc(t)}" ${t===elegido?"checked":""}><span>${esc(t)}</span></label>`).join("");
-    msg.textContent = ""; f.hidden = false; $("pedOk").hidden = true; syncAddr();
-    dlg.showModal(); setTimeout(() => f.nombre.focus(), 50);
-  }
+  function open(){ renderItems(); msg.textContent = ""; f.hidden = false; $("pedOk").hidden = true; syncAddr(); dlg.showModal(); dlg.scrollTop = 0; }
   f.addEventListener("submit", e => {
     e.preventDefault(); if(f.website.value) return;
-    const bad = [...f.querySelectorAll("[required]")].find(i => !i.value.trim());
+    if(!CART.length){ msg.textContent = "Agrega al menos un producto."; return; }
+    const bad = [...f.querySelectorAll("[required]")].find(i => !i.closest("[hidden]") && !i.value.trim());
     if(bad){ msg.textContent = "Completa los campos marcados."; bad.focus(); return; }
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email.value.trim())){ msg.textContent = "Revisa tu email."; f.email.focus(); return; }
     const d = Object.fromEntries(new FormData(f)); delete d.website;
+    const m = modo();
+    if(m === "retiro") ["empresa_envio","direccion","ciudad","provincia","cp","pais"].forEach(k => d[k] = "");
+    if(m === "domicilio") d.empresa_envio = "";
     const id = "U-" + new Date().toISOString().slice(2,10).replace(/-/g,"") + "-" + Math.random().toString(36).slice(2,6).toUpperCase();
-    const envio = !$("pedAddr").hidden;
-    const lineas = [
-      `Hola! Quiero hacer un pedido de merch de Urbanse.`, ``, `Pedido: ${id}`,
-      `Producto: ${item.producto}${d.talle ? ` · Talle ${d.talle}` : ""} · Cantidad ${d.cantidad}`,
-      `Precio: ${item.precio || "-"} c/u`, ``,
-      `Nombre: ${d.nombre}`, `Email: ${d.email}`, `WhatsApp: ${d.telefono}`,
-      `Entrega: ${d.entrega}`,
-      ...(envio ? [`Dirección: ${[d.direccion, d.ciudad, d.provincia, d.cp, d.pais].filter(Boolean).join(", ")}`] : []),
-      `Pago: ${d.pago}`, ...(d.notas ? [`Comentarios: ${d.notas}`] : [])
-    ];
+    const det = CART.map(i => `• ${i.producto}${i.talle ? ` · Talle ${i.talle}` : ""} · x${i.cant}${num(i.precio) ? ` · ${fmt(num(i.precio) * i.cant)}` : ""}`);
+    const lugar = m === "domicilio" ? `Dirección: ${[d.direccion, d.ciudad, d.provincia, d.cp, d.pais].filter(Boolean).join(", ")}`
+                : m === "sucursal" ? `Sucursal: ${[d.empresa_envio, d.direccion, d.ciudad, d.provincia, d.cp, d.pais].filter(Boolean).join(", ")}`
+                : `Retiro: a coordinar por aquí`;
+    const lineas = [`Hola! Quiero hacer un pedido de merch de Urbanse.`, ``, `Pedido: ${id}`, ...det,
+      `Total: ${total() ? fmt(total()) : "-"} (sin envío)`, ``,
+      `Nombre: ${d.nombre}`, `Email: ${d.email}`, `WhatsApp: ${d.telefono}`, `Entrega: ${d.entrega}`, lugar,
+      `Pago: ${d.pago}`, ...(d.notas ? [`Comentarios: ${d.notas}`] : [])];
     const wa = `https://wa.me/${CONFIG.MERCH_WHATSAPP}?text=${encodeURIComponent(lineas.join("\n"))}`;
     const w = window.open(wa, "_blank"); if(w) try{ w.opener = null; }catch(_){}
     if(CONFIG.SHEET_API_URL){
-      fetch(CONFIG.SHEET_API_URL, {method:"POST", mode:"no-cors", keepalive:true, body:new URLSearchParams(Object.assign({tipo:"pedido", pedido:id, producto:item.producto, precio:item.precio||"", origen:location.href}, envio ? d : Object.assign(d, {direccion:"", ciudad:"", provincia:"", cp:"", pais:""})))}).catch(()=>{});
+      const resumen = CART.map(i => `${i.producto}${i.talle ? ` (${i.talle})` : ""} x${i.cant}`).join("; ");
+      fetch(CONFIG.SHEET_API_URL, {method:"POST", mode:"no-cors", keepalive:true, body:new URLSearchParams(Object.assign({}, d, {
+        tipo:"pedido", pedido:id, producto:resumen, cantidad:String(units()), total:String(total() || ""), origen:location.href}))}).catch(()=>{});
     }
     $("pedOkId").textContent = id; $("pedOkWa").href = wa;
-    f.hidden = true; $("pedOk").hidden = false; dlg.scrollTop = 0; f.reset(); msg.textContent = "";
+    f.hidden = true; $("pedOk").hidden = false; dlg.scrollTop = 0;
+    CART = []; save(); badge(); f.reset(); msg.textContent = "";
   });
+  badge();
 })();
 
 /* ---------- Tienda ---------- */
@@ -1027,7 +1077,7 @@ function renderProbador(){
   $("probInfo").innerHTML = `<span class="now">En el probador</span><h3>${esc(m.producto)}</h3><p class="meta">${esc([m.detalle, mDemo ? "Ejemplo" : ""].filter(Boolean).join(" · "))}</p>${!out && ultimas(m) ? `<p class="last">${ultimas(m)}</p>` : ""}
     ${(m.imagen2 || m.imagen_url_2) ? `<div class="sizes lados"><button type="button" data-lado="0" class="${mLado?"":"on"}">Frente</button><button type="button" data-lado="1" class="${mLado?"on":""}">Espalda</button></div>` : ""}
     ${tl.length ? `<div class="sizes talles">${tl.map((t,i) => `<button type="button" data-talle="${esc(t)}" class="${i===Math.min(1,tl.length-1)?"on":""}">${esc(t)}</button>`).join("")}</div>` : ""}
-    ${out ? `<span class="cta off">Agotado</span>` : url ? `<a class="cta" href="${esc(url)}" target="_blank" rel="noopener">Comprar · ${esc(precio)}</a>` : CONFIG.MERCH_WHATSAPP ? `<button type="button" class="cta" data-pedir>Pedir · ${esc(precio)}</button>` : `<span class="cta">Muy pronto</span>`}`;
+    ${out ? `<span class="cta off">Agotado</span>` : url ? `<a class="cta" href="${esc(url)}" target="_blank" rel="noopener">Comprar · ${esc(precio)}</a>` : CONFIG.MERCH_WHATSAPP ? `<button type="button" class="cta" data-add>Agregar al pedido · ${esc(precio)}</button>` : `<span class="cta">Muy pronto</span>`}`;
   document.querySelectorAll("#pile .fold").forEach((f,i) => f.classList.toggle("on", i===mSel));
 }
 (() => { let x0 = null, y0 = 0;

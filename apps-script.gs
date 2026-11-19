@@ -36,7 +36,7 @@ const TABS = {
   "Ciudades pedidas": ["recibido", "ciudad", "pais", "email", "origen"],
   Suscriptores: ["recibido", "email", "ciudad", "intereses", "origen", "estado"],
   "Pedidos merch": ["recibido", "pedido", "producto", "talle", "cantidad", "precio", "total", "nombre", "telefono", "email",
-                    "entrega", "direccion", "ciudad", "provincia", "cp", "pais", "pago", "notas", "origen", "estado", "seguimiento"]
+                    "entrega", "empresa_envio", "direccion", "ciudad", "provincia", "cp", "pais", "pago", "notas", "origen", "estado", "seguimiento"]
 };
 const ESTADOS_PEDIDO = ["Nuevo", "Confirmado", "Pagado", "Enviado", "Entregado", "Cancelado"];
 
@@ -86,7 +86,9 @@ function setup() {
     SpreadsheetApp.newDataValidation().requireValueInList(["Disponible", "Pronto", "Agotado"], true).build());
   ss.getSheetByName("Suscriptores").getRange("F2:F").setDataValidation(
     SpreadsheetApp.newDataValidation().requireValueInList(["Activo", "Baja"], true).build());
-  ss.getSheetByName("Pedidos merch").getRange("T2:T").setDataValidation(
+  const ped = ss.getSheetByName("Pedidos merch");
+  const colEst = ped.getRange(1, 1, 1, ped.getLastColumn()).getValues()[0].map(h => String(h).trim()).indexOf("estado") + 1;
+  if (colEst) ped.getRange(2, colEst, ped.getMaxRows() - 1, 1).setDataValidation(
     SpreadsheetApp.newDataValidation().requireValueInList(ESTADOS_PEDIDO, true).build());
   ss.getSheetByName("Booking").getRange("O2:O").setDataValidation(
     SpreadsheetApp.newDataValidation().requireValueInList(["Nuevo", "Contactado", "Negociando", "Confirmado", "Descartado"], true).build());
@@ -191,8 +193,6 @@ function suscripcionPost_(p) {
 function pedidoPost_(p) {
   if (!p.pedido || !p.producto || !p.nombre || !p.telefono) return json_(JSON.stringify({ ok: false, error: "faltan datos" }));
   const cols = TABS["Pedidos merch"];
-  const precioN = Number(String(p.precio || "").replace(/[^\d]/g, "")) || 0;
-  const cant = Math.max(1, Math.min(20, parseInt(p.cantidad, 10) || 1));
   const lock = LockService.getScriptLock();
   lock.waitLock(10000);
   try {
@@ -202,18 +202,27 @@ function pedidoPost_(p) {
       sh = ss.insertSheet("Pedidos merch");
       sh.getRange(1, 1, 1, cols.length).setValues([cols]).setFontWeight("bold").setBackground("#D71D22").setFontColor("#000000");
       sh.setFrozenRows(1);
-      sh.getRange("T2:T").setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(ESTADOS_PEDIDO, true).build());
     }
-    const ya = sh.getLastRow() > 1 && sh.getRange(2, 2, sh.getLastRow() - 1, 1).getValues().some(r => String(r[0]) === String(p.pedido));
-    if (ya) return json_(JSON.stringify({ ok: true }));
-    sh.appendRow(cols.map(h => {
-      if (h === "recibido") return new Date();
-      if (h === "cantidad") return cant;
-      if (h === "total") return precioN ? precioN * cant : "";
-      if (h === "estado") return "Nuevo";
-      if (h === "seguimiento") return "";
-      return clean_(p[h]).slice(0, 300);
-    }));
+    // columnas por nombre: si falta alguna, se agrega al final sin mover las existentes
+    let head = sh.getRange(1, 1, 1, Math.max(1, sh.getLastColumn())).getValues()[0].map(h => String(h).trim());
+    cols.filter(h => head.indexOf(h) < 0).forEach(h => {
+      sh.getRange(1, head.filter(Boolean).length + 1).setValue(h).setFontWeight("bold").setBackground("#D71D22").setFontColor("#000000");
+      head = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].map(x => String(x).trim());
+    });
+    const colEstado = head.indexOf("estado") + 1;
+    sh.getRange(2, colEstado, Math.max(1, sh.getMaxRows() - 1), 1)
+      .setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(ESTADOS_PEDIDO, true).build());
+    const colPedido = head.indexOf("pedido") + 1;
+    if (sh.getLastRow() > 1 && sh.getRange(2, colPedido, sh.getLastRow() - 1, 1).getValues().some(r => String(r[0]) === String(p.pedido)))
+      return json_(JSON.stringify({ ok: true }));
+    const val = {
+      recibido: new Date(),
+      cantidad: Math.max(1, parseInt(p.cantidad, 10) || 1),
+      total: Number(String(p.total || "").replace(/[^\d]/g, "")) || "",
+      estado: "Nuevo",
+      seguimiento: ""
+    };
+    sh.appendRow(head.map(h => h in val ? val[h] : clean_(p[h]).slice(0, 500)));
   } finally {
     lock.releaseLock();
   }
@@ -221,7 +230,7 @@ function pedidoPost_(p) {
     MailApp.sendEmail({
       to: NOTIFY_EMAIL,
       replyTo: clean_(p.email),
-      subject: "Pedido de merch " + clean_(p.pedido) + " — " + clean_(p.producto),
+      subject: "Pedido de merch " + clean_(p.pedido) + " — " + clean_(p.nombre),
       body: "Nuevo pedido de merch desde la web de Urbanse. El fan lo termina por WhatsApp con el mismo número de pedido.\n\n" +
             cols.filter(h => p[h]).map(h => h.toUpperCase() + ": " + clean_(p[h])).join("\n") +
             "\n\nControl de pedidos: " + SpreadsheetApp.getActiveSpreadsheet().getUrl()
